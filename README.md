@@ -139,3 +139,7 @@ state this client does not classify.
 ## Requirements
 
 Go 1.25 or newer (the list iterators use `iter.Seq2`).
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
