@@ -1,0 +1,25 @@
+# The generated client. Regenerated wholesale by `go generate ./...`; nothing in
+# fbapi/ is ever edited by hand, which is why it sits in its own package.
+#
+# The contract is the platform's own openapi.json, read from the SIBLING
+# checkout. This repository deliberately does NOT vendor a copy: a vendored spec
+# is a second answer to "what does the API look like", and the first time it
+# drifts nobody knows which one is wrong.
+package: fbapi
+output: fbapi/client.gen.go
+generate:
+  models: true
+  client: true
+output-options:
+  # The staff surface is excluded, not filtered later. Those endpoints
+  # authenticate with a `cp_admin_session` cookie that an API token can never
+  # hold, so generating them would produce ~130 methods whose only possible
+  # answer is 401. `system` is the health probe.
+  exclude-tags:
+    - admin
+    - admin-announcements
+    - admin-organizations
+    - system
+  # The customer's own `Idempotency-Key`, `limit`/`offset` and path parameters
+  # all arrive as typed params structs; nothing here is stringly typed.
+  skip-prune: false

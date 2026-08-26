@@ -1,0 +1,67 @@
+name: go
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # The generated client is only as current as the last regeneration, and
+    # nothing here watches the platform repository. A daily run is what turns a
+    # drifted contract into a failing build rather than into a bug report.
+    - cron: '0 6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          check-latest: true
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -race ./...
+      - name: gofmt
+        run: |
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then echo "not gofmt-clean:"; echo "$out"; exit 1; fi
+
+  drift:
+    # Regenerates against the platform's current spec and fails if the checked-in
+    # client is behind. The state table is held to the enums by the test suite,
+    # so a new state shows up here as a test failure with the value named.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: firstboot-go
+      - uses: actions/checkout@v4
+        with:
+          repository: firstboot-io/platform
+          path: platform
+          token: ${{ secrets.PLATFORM_READ_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - working-directory: firstboot-go
+        run: |
+          go generate ./...
+          git diff --exit-code -- fbapi/ || {
+            echo "::error::fbapi/ is behind the platform's openapi.json; run 'go generate ./...' and commit"
+            exit 1
+          }
+      - working-directory: firstboot-go
+        run: go test ./...
+
+  vuln:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...

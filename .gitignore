@@ -1,0 +1,6 @@
+# Nothing generated is ignored: fbapi/ is checked in on purpose, so a consumer
+# can `go get` this module without the platform repository and without a
+# generator. What is ignored is only local noise.
+.DS_Store
+*.test
+coverage.out
