@@ -1,4 +1,4 @@
-# firstboot-go
+# Firstboot Go SDK
 
 The Go client for the Firstboot API.
 

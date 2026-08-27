@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: firstboot-go
+          path: go-sdk
       - uses: actions/checkout@v4
         with:
           repository: firstboot-io/platform
@@ -47,14 +47,14 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25'
-      - working-directory: firstboot-go
+      - working-directory: go-sdk
         run: |
           go generate ./...
           git diff --exit-code -- fbapi/ || {
             echo "::error::fbapi/ is behind the platform's openapi.json; run 'go generate ./...' and commit"
             exit 1
           }
-      - working-directory: firstboot-go
+      - working-directory: go-sdk
         run: go test ./...
 
   vuln:
