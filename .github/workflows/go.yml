@@ -31,6 +31,13 @@ jobs:
           if [ -n "$out" ]; then echo "not gofmt-clean:"; echo "$out"; exit 1; fi
 
   drift:
+    # The platform is a private repository, and GitHub does not hand a secret to
+    # a workflow run triggered by a fork's pull request. So this cannot run
+    # there, and a job that can never pass on a fork is a red mark that teaches
+    # people to ignore red marks. It still runs on every push, on the schedule,
+    # and on a pull request opened from a branch of this repository, which is
+    # where the answer has to be right.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Regenerates against the platform's current spec and fails if the checked-in
     # client is behind. The state table is held to the enums by the test suite,
     # so a new state shows up here as a test failure with the value named.
