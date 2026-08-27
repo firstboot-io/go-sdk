@@ -1701,6 +1701,45 @@ func (e ServerMetricsListParamsWindow) Valid() bool {
 	}
 }
 
+// Defines values for TagsListParamsKind.
+const (
+	TagsListParamsKindApp          TagsListParamsKind = "app"
+	TagsListParamsKindDatabase     TagsListParamsKind = "database"
+	TagsListParamsKindDnsZone      TagsListParamsKind = "dns_zone"
+	TagsListParamsKindDomain       TagsListParamsKind = "domain"
+	TagsListParamsKindEmpty        TagsListParamsKind = ""
+	TagsListParamsKindLoadBalancer TagsListParamsKind = "load_balancer"
+	TagsListParamsKindNetwork      TagsListParamsKind = "network"
+	TagsListParamsKindServer       TagsListParamsKind = "server"
+	TagsListParamsKindVolume       TagsListParamsKind = "volume"
+)
+
+// Valid indicates whether the value is a known member of the TagsListParamsKind enum.
+func (e TagsListParamsKind) Valid() bool {
+	switch e {
+	case TagsListParamsKindApp:
+		return true
+	case TagsListParamsKindDatabase:
+		return true
+	case TagsListParamsKindDnsZone:
+		return true
+	case TagsListParamsKindDomain:
+		return true
+	case TagsListParamsKindEmpty:
+		return true
+	case TagsListParamsKindLoadBalancer:
+		return true
+	case TagsListParamsKindNetwork:
+		return true
+	case TagsListParamsKindServer:
+		return true
+	case TagsListParamsKindVolume:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for WalletLedgerListParamsDirection.
 const (
 	WalletLedgerListParamsDirectionEmpty WalletLedgerListParamsDirection = ""
@@ -2087,7 +2126,10 @@ type AppBody struct {
 	Runtime            string     `json:"runtime"`
 	SourceUrl          *string    `json:"source_url,omitempty"`
 	StartCommand       *string    `json:"start_command,omitempty"`
-	TrafficGb          int32      `json:"traffic_gb"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags      *[]string `json:"tags"`
+	TrafficGb int32     `json:"traffic_gb"`
 
 	// TrafficOverageCurrency Currency of traffic_overage_tb_minor
 	TrafficOverageCurrency *string `json:"traffic_overage_currency,omitempty"`
@@ -2171,6 +2213,9 @@ type AppCreateInputBody struct {
 
 	// StartCommand Overrides the image's own command, run through a shell. Leave empty unless detection picked the wrong process.
 	StartCommand *string `json:"start_command,omitempty"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // AppCreateInputBodyBuilder Who writes the Dockerfile. dockerfile (the default) means your repository carries one. preset means the platform generates one for the stack you name, which is how a repository with no Dockerfile deploys.
@@ -2720,6 +2765,9 @@ type CreateInputBody struct {
 	// SshKeyIds Selection from registered SSH keys
 	SshKeyIds *[]string `json:"ssh_key_ids,omitempty"`
 
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
+
 	// UserData Cloud-init document applied verbatim on first boot (#cloud-config, shell script, #include or MIME multipart). OS images only — not accepted with app images, backups or a birth ISO. Readable from inside the guest by any process: never put secrets in it
 	UserData *string `json:"user_data,omitempty"`
 }
@@ -2820,6 +2868,9 @@ type DatabaseBody struct {
 	PendingApply bool    `json:"pending_apply"`
 	PlanSlug     *string `json:"plan_slug,omitempty"`
 
+	// ProjectId Project the instance belongs to (organizational)
+	ProjectId *string `json:"project_id,omitempty"`
+
 	// PublicAccess False = only the private network and attached apps can reach it
 	PublicAccess bool    `json:"public_access"`
 	RegionName   *string `json:"region_name,omitempty"`
@@ -2827,6 +2878,9 @@ type DatabaseBody struct {
 
 	// State SETTLED on active, stopped_dunning, suspended, deleted or either error_* state; provisioning, resizing and deleting are in flight. A create settles on active.
 	State DatabaseBodyState `json:"state"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
 }
 
 // DatabaseBodyEngine defines model for DatabaseBody.Engine.
@@ -2875,8 +2929,14 @@ type DatabaseCreateInputBody struct {
 	// Plan db-1 | db-2 | db-3; empty = db-1
 	Plan *string `json:"plan,omitempty"`
 
+	// ProjectId Optional project for grouping
+	ProjectId *string `json:"project_id,omitempty"`
+
 	// Region Region slug; empty = default region
 	Region *string `json:"region,omitempty"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // DatabaseCreateInputBodyEngine Empty = postgresql
@@ -3195,6 +3255,9 @@ type DnsZoneBody struct {
 	// Nameservers NS hostnames to set at the registrar for the zone to go live
 	Nameservers *[]string `json:"nameservers"`
 	ProjectId   *string   `json:"project_id,omitempty"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
 }
 
 // DomainAutoRenewInputBody defines model for DomainAutoRenewInputBody.
@@ -3234,10 +3297,13 @@ type DomainBody struct {
 	RegistrarLock      bool       `json:"registrar_lock"`
 
 	// State SETTLED on active, expired, redemption or failed; registering and transfer_pending are in flight. A register settles on active, and failed carries a full refund.
-	State          DomainBodyState `json:"state"`
-	Tld            string          `json:"tld"`
-	TransferableAt *time.Time      `json:"transferable_at,omitempty"`
-	Years          int64           `json:"years"`
+	State DomainBodyState `json:"state"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags           *[]string  `json:"tags"`
+	Tld            string     `json:"tld"`
+	TransferableAt *time.Time `json:"transferable_at,omitempty"`
+	Years          int64      `json:"years"`
 }
 
 // DomainBodyState SETTLED on active, expired, redemption or failed; registering and transfer_pending are in flight. A register settles on active, and failed carries a full refund.
@@ -3378,7 +3444,10 @@ type DomainRegisterInputBody struct {
 	Name      string  `json:"name"`
 	Privacy   *bool   `json:"privacy,omitempty"`
 	ProjectId *string `json:"project_id,omitempty"`
-	Years     int64   `json:"years"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags  *[]string `json:"tags,omitempty"`
+	Years int64     `json:"years"`
 }
 
 // DomainRenewInputBody defines model for DomainRenewInputBody.
@@ -3475,6 +3544,9 @@ type DomainTransferInputBody struct {
 	Name      string  `json:"name"`
 	Privacy   *bool   `json:"privacy,omitempty"`
 	ProjectId *string `json:"project_id,omitempty"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // DomainsListOutputBody defines model for DomainsListOutputBody.
@@ -4348,12 +4420,18 @@ type LoadBalancerBody struct {
 	// PendingApply True while an edit is not yet live on the data plane
 	PendingApply bool    `json:"pending_apply"`
 	PlanSlug     *string `json:"plan_slug,omitempty"`
-	RegionName   *string `json:"region_name,omitempty"`
-	RegionSlug   *string `json:"region_slug,omitempty"`
-	RuleCount    int64   `json:"rule_count"`
+
+	// ProjectId Project the load balancer belongs to (organizational)
+	ProjectId  *string `json:"project_id,omitempty"`
+	RegionName *string `json:"region_name,omitempty"`
+	RegionSlug *string `json:"region_slug,omitempty"`
+	RuleCount  int64   `json:"rule_count"`
 
 	// State SETTLED on active, stopped_dunning, deleted or either error_* state; provisioning and deleting are in flight. A create settles on active.
 	State LoadBalancerBodyState `json:"state"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
 }
 
 // LoadBalancerBodyAlgorithm defines model for LoadBalancerBody.Algorithm.
@@ -4385,12 +4463,18 @@ type LoadBalancerCreateInputBody struct {
 	// Plan lb-1 | lb-2 | lb-3; empty = lb-1
 	Plan *string `json:"plan,omitempty"`
 
+	// ProjectId Optional project for grouping
+	ProjectId *string `json:"project_id,omitempty"`
+
 	// Region Region slug; empty = default region
 	Region *string `json:"region,omitempty"`
 
 	// RestrictBackends Close each backend's target port to everything except this load balancer. Default true.
 	RestrictBackends *bool                   `json:"restrict_backends,omitempty"`
 	Rules            *[]LoadBalancerRuleBody `json:"rules"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // LoadBalancerCreateInputBodyAlgorithm Empty = round_robin
@@ -4576,6 +4660,9 @@ type NetworkBody struct {
 
 	// State SETTLED on active or error; creating and deleting are in flight.
 	State NetworkBodyState `json:"state"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
 }
 
 // NetworkBodyState SETTLED on active or error; creating and deleting are in flight.
@@ -4594,6 +4681,9 @@ type NetworkCreateInputBody struct {
 
 	// ProjectId Optional project for grouping
 	ProjectId *string `json:"project_id,omitempty"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // NetworkGetOutputBody defines model for NetworkGetOutputBody.
@@ -4949,6 +5039,17 @@ type ProfileBody struct {
 
 // ProfileBodyKind individual = TCKN, company = VKN (or the owner's TCKN for sole proprietorships) + tax office
 type ProfileBodyKind string
+
+// ProjectAssignmentBody defines model for ProjectAssignmentBody.
+type ProjectAssignmentBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/ProjectAssignmentBody.json
+	Schema *string `json:"$schema,omitempty"`
+
+	// ProjectId Target project; omit the field to detach the resource from all projects
+	ProjectId *string `json:"project_id,omitempty"`
+}
 
 // ProjectBody defines model for ProjectBody.
 type ProjectBody struct {
@@ -5486,6 +5587,9 @@ type ServerBody struct {
 	State      ServerBodyState `json:"state"`
 	StateSince time.Time       `json:"state_since"`
 
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
+
 	// TrafficUsedBytes Outbound bytes used this month (detail response only)
 	TrafficUsedBytes *int64 `json:"traffic_used_bytes,omitempty"`
 
@@ -5562,17 +5666,6 @@ type ServerPriceChange struct {
 
 	// NewChargeMinor What will be charged from effective_at, at today's rate
 	NewChargeMinor int64 `json:"new_charge_minor"`
-}
-
-// ServerProjectInputBody defines model for ServerProjectInputBody.
-type ServerProjectInputBody struct {
-	// Schema A URL to the JSON Schema for this object.
-	//
-	// Examples: https://example.com/schemas/ServerProjectInputBody.json
-	Schema *string `json:"$schema,omitempty"`
-
-	// ProjectId Target project; omit the field to detach the server from all projects
-	ProjectId *string `json:"project_id,omitempty"`
 }
 
 // ServerRescueOutputBody defines model for ServerRescueOutputBody.
@@ -5745,6 +5838,35 @@ type SupportAccessOutputBody struct {
 	// Examples: https://example.com/schemas/SupportAccessOutputBody.json
 	Schema *string              `json:"$schema,omitempty"`
 	Access *[]SupportAccessItem `json:"access"`
+}
+
+// TagCountBody defines model for TagCountBody.
+type TagCountBody struct {
+	// Count Resources carrying this tag, within the kind filter if one was given
+	Count int64  `json:"count"`
+	Tag   string `json:"tag"`
+}
+
+// TagsBody defines model for TagsBody.
+type TagsBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/TagsBody.json
+	Schema *string `json:"$schema,omitempty"`
+
+	// Tags The complete tag set, replacing whatever was there. Lowercased, deduplicated and sorted before storage, so the response is the stored form and not an echo. At most 10 per resource, each up to 32 characters of a-z, 0-9, dot, underscore, colon or dash.
+	Tags *[]string `json:"tags"`
+}
+
+// TagsListOutputBody defines model for TagsListOutputBody.
+type TagsListOutputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/TagsListOutputBody.json
+	Schema *string `json:"$schema,omitempty"`
+
+	// Tags Sorted by tag
+	Tags *[]TagCountBody `json:"tags"`
 }
 
 // TicketAttachmentBody defines model for TicketAttachmentBody.
@@ -6024,6 +6146,9 @@ type VolumeBody struct {
 	MountState string `json:"mount_state"`
 	Name       string `json:"name"`
 
+	// ProjectId Project the volume belongs to (organizational)
+	ProjectId *string `json:"project_id,omitempty"`
+
 	// Serial Disk serial (vol-…); resolve the guest path with /dev/disk/by-id/*<serial>
 	Serial string `json:"serial"`
 
@@ -6036,6 +6161,9 @@ type VolumeBody struct {
 
 	// State SETTLED on available, attached or error; everything else is in flight. A create settles on available, an attach on attached.
 	State VolumeBodyState `json:"state"`
+
+	// Tags Tags this resource carries. Set them with PUT .../tags.
+	Tags *[]string `json:"tags"`
 }
 
 // VolumeBodyState SETTLED on available, attached or error; everything else is in flight. A create settles on available, an attach on attached.
@@ -6063,6 +6191,9 @@ type VolumeCreateInputBody struct {
 
 	// SizeGb The real band is operator policy — read GET /v1/volumes/limits. A size outside it is refused with VOLUME_SIZE_INVALID.
 	SizeGb int64 `json:"size_gb"`
+
+	// Tags Tags to give the volume at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // VolumeCreateInputBodyFsType Format the new volume with this filesystem. Omit to receive a raw disk you format yourself.
@@ -6147,6 +6278,9 @@ type ZoneCreateInputBody struct {
 
 	// ServerId Seed @ and www with A/AAAA records pointing at this server's public IP
 	ServerId *string `json:"server_id,omitempty"`
+
+	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
+	Tags *[]string `json:"tags,omitempty"`
 }
 
 // ZoneDetailOutputBody defines model for ZoneDetailOutputBody.
@@ -6174,8 +6308,13 @@ type AccountIdentityUnlinkParamsProvider string
 
 // AppsListParams defines parameters for AppsList.
 type AppsListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // AppCreateParams defines parameters for AppCreate.
@@ -6255,8 +6394,13 @@ type ServerBackupListAllParams struct {
 
 // DatabasesListParams defines parameters for DatabasesList.
 type DatabasesListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // DatabaseCreateParams defines parameters for DatabaseCreate.
@@ -6279,8 +6423,13 @@ type DatabaseMetricsListParamsWindow string
 
 // DnsZonesListParams defines parameters for DnsZonesList.
 type DnsZonesListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // DnsZoneCreateParams defines parameters for DnsZoneCreate.
@@ -6297,8 +6446,13 @@ type DnsRecordCreateParams struct {
 
 // DomainsListParams defines parameters for DomainsList.
 type DomainsListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// State Filter by state
 	State *string `form:"state,omitempty" json:"state,omitempty"`
@@ -6373,8 +6527,13 @@ type IsoCreateParams struct {
 
 // LoadBalancersListParams defines parameters for LoadBalancersList.
 type LoadBalancersListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // LoadBalancerCreateParams defines parameters for LoadBalancerCreate.
@@ -6385,8 +6544,13 @@ type LoadBalancerCreateParams struct {
 
 // NetworksListParams defines parameters for NetworksList.
 type NetworksListParams struct {
-	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag    *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+	Limit  *int32    `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32    `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // NetworkCreateParams defines parameters for NetworkCreate.
@@ -6427,16 +6591,19 @@ type ProjectCreateParams struct {
 
 // ServersListParams defines parameters for ServersList.
 type ServersListParams struct {
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+
 	// Search Name, IP address or image name, partial match
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
 	// State State bucket; 'other' is everything that is neither running nor stopped
-	State *ServersListParamsState `form:"state,omitempty" json:"state,omitempty"`
-
-	// Project Project UUID, or the literal 'none' for servers in no project
-	Project *string `form:"project,omitempty" json:"project,omitempty"`
-	Limit   *int32  `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset  *int32  `form:"offset,omitempty" json:"offset,omitempty"`
+	State  *ServersListParamsState `form:"state,omitempty" json:"state,omitempty"`
+	Limit  *int32                  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32                  `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // ServersListParamsState defines parameters for ServersList.
@@ -6489,6 +6656,15 @@ type SshKeyCreateParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
+// TagsListParams defines parameters for TagsList.
+type TagsListParams struct {
+	// Kind Only tags used by this kind of resource. Empty = every kind.
+	Kind *TagsListParamsKind `form:"kind,omitempty" json:"kind,omitempty"`
+}
+
+// TagsListParamsKind defines parameters for TagsList.
+type TagsListParamsKind string
+
 // TicketsListParams defines parameters for TicketsList.
 type TicketsListParams struct {
 	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
@@ -6497,6 +6673,12 @@ type TicketsListParams struct {
 
 // VolumeListParams defines parameters for VolumeList.
 type VolumeListParams struct {
+	// Project Project UUID, or the literal 'none' for resources in no project at all
+	Project *string `form:"project,omitempty" json:"project,omitempty"`
+
+	// Tag Filter by tag. Repeat to require several: ?tag=env:prod&tag=role:web returns only what carries both.
+	Tag *[]string `form:"tag,omitempty" json:"tag,omitempty"`
+
 	// ServerId Only volumes attached to this server
 	ServerId *string `form:"server_id,omitempty" json:"server_id,omitempty"`
 	Limit    *int32  `form:"limit,omitempty" json:"limit,omitempty"`
@@ -6592,6 +6774,9 @@ type AppExecStartJSONRequestBody = ExecStartInputBody
 // AppLogsRequestJSONRequestBody defines body for AppLogsRequest for application/json ContentType.
 type AppLogsRequestJSONRequestBody = LogRequestInputBody
 
+// AppProjectSetJSONRequestBody defines body for AppProjectSet for application/json ContentType.
+type AppProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // AppResizeJSONRequestBody defines body for AppResize for application/json ContentType.
 type AppResizeJSONRequestBody = AppResizeInputBody
 
@@ -6606,6 +6791,9 @@ type AppUpdateJSONRequestBody = AppUpdateInputBody
 
 // AppSourceSetJSONRequestBody defines body for AppSourceSet for application/json ContentType.
 type AppSourceSetJSONRequestBody = AppSourceInputBody
+
+// AppTagsSetJSONRequestBody defines body for AppTagsSet for application/json ContentType.
+type AppTagsSetJSONRequestBody = TagsBody
 
 // AuthImpersonateJSONRequestBody defines body for AuthImpersonate for application/json ContentType.
 type AuthImpersonateJSONRequestBody = ImpersonateInputBody
@@ -6640,11 +6828,17 @@ type DatabaseCreateJSONRequestBody = DatabaseCreateInputBody
 // DatabaseDbCreateJSONRequestBody defines body for DatabaseDbCreate for application/json ContentType.
 type DatabaseDbCreateJSONRequestBody = DatabaseDbCreateInputBody
 
+// DatabaseProjectSetJSONRequestBody defines body for DatabaseProjectSet for application/json ContentType.
+type DatabaseProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // DatabasePublicAccessSetJSONRequestBody defines body for DatabasePublicAccessSet for application/json ContentType.
 type DatabasePublicAccessSetJSONRequestBody = DatabasePublicAccessInputBody
 
 // DatabaseRestoreCreateJSONRequestBody defines body for DatabaseRestoreCreate for application/json ContentType.
 type DatabaseRestoreCreateJSONRequestBody = DatabaseRestoreInputBody
+
+// DatabaseTagsSetJSONRequestBody defines body for DatabaseTagsSet for application/json ContentType.
+type DatabaseTagsSetJSONRequestBody = TagsBody
 
 // DatabaseTrustedSourcesSetJSONRequestBody defines body for DatabaseTrustedSourcesSet for application/json ContentType.
 type DatabaseTrustedSourcesSetJSONRequestBody = DatabaseTrustedSourcesInputBody
@@ -6661,11 +6855,17 @@ type DatabaseResizeJSONRequestBody = DatabaseResizeInputBody
 // DnsZoneCreateJSONRequestBody defines body for DnsZoneCreate for application/json ContentType.
 type DnsZoneCreateJSONRequestBody = ZoneCreateInputBody
 
+// DnsZoneProjectSetJSONRequestBody defines body for DnsZoneProjectSet for application/json ContentType.
+type DnsZoneProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // DnsRecordCreateJSONRequestBody defines body for DnsRecordCreate for application/json ContentType.
 type DnsRecordCreateJSONRequestBody = RecordCreateInputBody
 
 // DnsRecordUpdateJSONRequestBody defines body for DnsRecordUpdate for application/json ContentType.
 type DnsRecordUpdateJSONRequestBody = RecordUpdateInputBody
+
+// DnsZoneTagsSetJSONRequestBody defines body for DnsZoneTagsSet for application/json ContentType.
+type DnsZoneTagsSetJSONRequestBody = TagsBody
 
 // DomainContactCreateJSONRequestBody defines body for DomainContactCreate for application/json ContentType.
 type DomainContactCreateJSONRequestBody = DomainContactBodyInput
@@ -6694,8 +6894,14 @@ type DomainNameserversSetJSONRequestBody = DomainNameserversInputBody
 // DomainPrivacySetJSONRequestBody defines body for DomainPrivacySet for application/json ContentType.
 type DomainPrivacySetJSONRequestBody = DomainFlagInputBody
 
+// DomainProjectSetJSONRequestBody defines body for DomainProjectSet for application/json ContentType.
+type DomainProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // DomainRenewJSONRequestBody defines body for DomainRenew for application/json ContentType.
 type DomainRenewJSONRequestBody = DomainRenewInputBody
+
+// DomainTagsSetJSONRequestBody defines body for DomainTagsSet for application/json ContentType.
+type DomainTagsSetJSONRequestBody = TagsBody
 
 // FirewallCreateJSONRequestBody defines body for FirewallCreate for application/json ContentType.
 type FirewallCreateJSONRequestBody = FirewallCreateInputBody
@@ -6724,11 +6930,23 @@ type LoadBalancerCreateJSONRequestBody = LoadBalancerCreateInputBody
 // LoadBalancerBackendsSetJSONRequestBody defines body for LoadBalancerBackendsSet for application/json ContentType.
 type LoadBalancerBackendsSetJSONRequestBody = LoadBalancerBackendsPutInputBody
 
+// LoadBalancerProjectSetJSONRequestBody defines body for LoadBalancerProjectSet for application/json ContentType.
+type LoadBalancerProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // LoadBalancerRulesReplaceJSONRequestBody defines body for LoadBalancerRulesReplace for application/json ContentType.
 type LoadBalancerRulesReplaceJSONRequestBody = LoadBalancerRulesPutInputBody
 
+// LoadBalancerTagsSetJSONRequestBody defines body for LoadBalancerTagsSet for application/json ContentType.
+type LoadBalancerTagsSetJSONRequestBody = TagsBody
+
 // NetworkCreateJSONRequestBody defines body for NetworkCreate for application/json ContentType.
 type NetworkCreateJSONRequestBody = NetworkCreateInputBody
+
+// NetworkProjectSetJSONRequestBody defines body for NetworkProjectSet for application/json ContentType.
+type NetworkProjectSetJSONRequestBody = ProjectAssignmentBody
+
+// NetworkTagsSetJSONRequestBody defines body for NetworkTagsSet for application/json ContentType.
+type NetworkTagsSetJSONRequestBody = TagsBody
 
 // NotificationsMarkReadJSONRequestBody defines body for NotificationsMarkRead for application/json ContentType.
 type NotificationsMarkReadJSONRequestBody = NotificationsReadInputBody
@@ -6779,7 +6997,7 @@ type ServerBackupCreateJSONRequestBody = BackupCreateInputBody
 type ServerNetworkAttachJSONRequestBody = NetAttachInputBody
 
 // ServerProjectSetJSONRequestBody defines body for ServerProjectSet for application/json ContentType.
-type ServerProjectSetJSONRequestBody = ServerProjectInputBody
+type ServerProjectSetJSONRequestBody = ProjectAssignmentBody
 
 // ServerRebuildJSONRequestBody defines body for ServerRebuild for application/json ContentType.
 type ServerRebuildJSONRequestBody = RebuildInputBody
@@ -6789,6 +7007,9 @@ type ServerResizeJSONRequestBody = ResizeInputBody
 
 // ServerSnapshotCreateJSONRequestBody defines body for ServerSnapshotCreate for application/json ContentType.
 type ServerSnapshotCreateJSONRequestBody = SnapshotCreateInputBody
+
+// ServerTagsSetJSONRequestBody defines body for ServerTagsSet for application/json ContentType.
+type ServerTagsSetJSONRequestBody = TagsBody
 
 // SshKeyCreateJSONRequestBody defines body for SshKeyCreate for application/json ContentType.
 type SshKeyCreateJSONRequestBody = KeyCreateInputBody
@@ -6805,8 +7026,14 @@ type VolumeCreateJSONRequestBody = VolumeCreateInputBody
 // VolumeAttachJSONRequestBody defines body for VolumeAttach for application/json ContentType.
 type VolumeAttachJSONRequestBody = VolumeAttachInputBody
 
+// VolumeProjectSetJSONRequestBody defines body for VolumeProjectSet for application/json ContentType.
+type VolumeProjectSetJSONRequestBody = ProjectAssignmentBody
+
 // VolumeResizeJSONRequestBody defines body for VolumeResize for application/json ContentType.
 type VolumeResizeJSONRequestBody = VolumeResizeInputBody
+
+// VolumeTagsSetJSONRequestBody defines body for VolumeTagsSet for application/json ContentType.
+type VolumeTagsSetJSONRequestBody = TagsBody
 
 // WalletPromoRedeemJSONRequestBody defines body for WalletPromoRedeem for application/json ContentType.
 type WalletPromoRedeemJSONRequestBody = PromoRedeemBody
@@ -7490,6 +7717,24 @@ type ClientInterface interface {
 	// Corresponds with GET /v1/apps/{code}/metrics (the `AppMetrics` operationId).
 	AppMetrics(ctx context.Context, code string, params *AppMetricsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// AppProjectSetWithBody Move app to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+	AppProjectSetWithBody(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppProjectSet Move app to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+	AppProjectSet(ctx context.Context, code string, body AppProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// AppReleasesList Release history
 	//
 	// What this app has served, newest first, with the commit each version came from where there was one.
@@ -7586,6 +7831,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /v1/apps/{code}/source (the `AppSourceSet` operationId).
 	AppSourceSet(ctx context.Context, code string, body AppSourceSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppTagsSetWithBody Replace app tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+	AppTagsSetWithBody(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AppTagsSet Replace app tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+	AppTagsSet(ctx context.Context, code string, body AppTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AuthImpersonateWithBody Exchange a staff impersonation grant for a session
 	//
@@ -7860,6 +8123,24 @@ type ClientInterface interface {
 	// Corresponds with POST /v1/databases/{databaseID}/dbs (the `DatabaseDbCreate` operationId).
 	DatabaseDbCreate(ctx context.Context, databaseID string, body DatabaseDbCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DatabaseProjectSetWithBody Move database to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+	DatabaseProjectSetWithBody(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DatabaseProjectSet Move database to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+	DatabaseProjectSet(ctx context.Context, databaseID string, body DatabaseProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DatabasePublicAccessSetWithBody Toggle public access
 	//
 	// Off by default. On admits ONLY the trusted-sources list, never the whole internet.
@@ -7895,6 +8176,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /v1/databases/{databaseID}/restores (the `DatabaseRestoreCreate` operationId).
 	DatabaseRestoreCreate(ctx context.Context, databaseID string, body DatabaseRestoreCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DatabaseTagsSetWithBody Replace database tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+	DatabaseTagsSetWithBody(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DatabaseTagsSet Replace database tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+	DatabaseTagsSet(ctx context.Context, databaseID string, body DatabaseTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DatabaseTrustedSourcesSetWithBody Set trusted sources
 	//
@@ -8020,6 +8319,24 @@ type ClientInterface interface {
 	// Corresponds with GET /v1/dns/zones/{id} (the `DnsZoneGet` operationId).
 	DnsZoneGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DnsZoneProjectSetWithBody Move DNS zone to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+	DnsZoneProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DnsZoneProjectSet Move DNS zone to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+	DnsZoneProjectSet(ctx context.Context, id string, body DnsZoneProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DnsRecordCreateWithBody Add DNS record
 	//
 	// Takes any type of body and a specified content type.
@@ -8052,6 +8369,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /v1/dns/zones/{id}/records/{recordId} (the `DnsRecordUpdate` operationId).
 	DnsRecordUpdate(ctx context.Context, id string, recordId string, body DnsRecordUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DnsZoneTagsSetWithBody Replace DNS zone tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+	DnsZoneTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DnsZoneTagsSet Replace DNS zone tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+	DnsZoneTagsSet(ctx context.Context, id string, body DnsZoneTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DomainContactsList List registrant profiles
 	//
@@ -8251,6 +8586,24 @@ type ClientInterface interface {
 	// Corresponds with PUT /v1/domains/{id}/privacy (the `DomainPrivacySet` operationId).
 	DomainPrivacySet(ctx context.Context, id string, body DomainPrivacySetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DomainProjectSetWithBody Move domain to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+	DomainProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DomainProjectSet Move domain to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+	DomainProjectSet(ctx context.Context, id string, body DomainProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DomainRenewWithBody Renew a domain
 	//
 	// Charges the wallet and extends the registration. Automatic renewal does the same thing on your behalf 14 days before expiry.
@@ -8268,6 +8621,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /v1/domains/{id}/renew (the `DomainRenew` operationId).
 	DomainRenew(ctx context.Context, id string, body DomainRenewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DomainTagsSetWithBody Replace domain tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+	DomainTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DomainTagsSet Replace domain tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+	DomainTagsSet(ctx context.Context, id string, body DomainTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AccountFeatures Which products are available to you
 	//
@@ -8576,6 +8947,24 @@ type ClientInterface interface {
 	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/backends (the `LoadBalancerBackendsSet` operationId).
 	LoadBalancerBackendsSet(ctx context.Context, loadBalancerID string, body LoadBalancerBackendsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// LoadBalancerProjectSetWithBody Move load balancer to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+	LoadBalancerProjectSetWithBody(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoadBalancerProjectSet Move load balancer to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+	LoadBalancerProjectSet(ctx context.Context, loadBalancerID string, body LoadBalancerProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// LoadBalancerRulesReplaceWithBody Replace forwarding rules
 	//
 	// Full replace; the new configuration is applied to the data plane asynchronously.
@@ -8593,6 +8982,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/rules (the `LoadBalancerRulesReplace` operationId).
 	LoadBalancerRulesReplace(ctx context.Context, loadBalancerID string, body LoadBalancerRulesReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoadBalancerTagsSetWithBody Replace load balancer tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+	LoadBalancerTagsSetWithBody(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LoadBalancerTagsSet Replace load balancer tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+	LoadBalancerTagsSet(ctx context.Context, loadBalancerID string, body LoadBalancerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// NetworksList My private networks
 	//
@@ -8628,6 +9035,42 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /v1/networks/{id} (the `NetworkGet` operationId).
 	NetworkGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NetworkProjectSetWithBody Move private network to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+	NetworkProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NetworkProjectSet Move private network to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+	NetworkProjectSet(ctx context.Context, id string, body NetworkProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NetworkTagsSetWithBody Replace private network tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+	NetworkTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// NetworkTagsSet Replace private network tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+	NetworkTagsSet(ctx context.Context, id string, body NetworkTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// NotificationsList Notification feed
 	//
@@ -9102,12 +9545,16 @@ type ClientInterface interface {
 
 	// ServerProjectSetWithBody Move server to a project
 	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with PATCH /v1/servers/{id}/project (the `ServerProjectSet` operationId).
 	ServerProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ServerProjectSet Move server to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -9202,6 +9649,24 @@ type ClientInterface interface {
 	// Corresponds with POST /v1/servers/{id}/snapshots/{snapshotId}/restore (the `ServerSnapshotRestore` operationId).
 	ServerSnapshotRestore(ctx context.Context, id string, snapshotId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ServerTagsSetWithBody Replace server tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+	ServerTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ServerTagsSet Replace server tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+	ServerTagsSet(ctx context.Context, id string, body ServerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ServerSnapshotListAll All restorable snapshots (global snapshots page)
 	//
 	// Corresponds with GET /v1/snapshots (the `ServerSnapshotListAll` operationId).
@@ -9237,6 +9702,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /v1/ssh-keys/{id} (the `SshKeyGet` operationId).
 	SshKeyGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TagsList Tags in use
+	//
+	// Every tag this organization has used, with how many resources carry it. Tags are created by using them: there is no endpoint that makes one, and one stops existing when the last resource drops it.
+	//
+	// Corresponds with GET /v1/tags (the `TagsList` operationId).
+	TagsList(ctx context.Context, params *TagsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TicketsList List support tickets
 	//
@@ -9362,6 +9834,24 @@ type ClientInterface interface {
 	// Corresponds with POST /v1/volumes/{id}/detach (the `VolumeDetach` operationId).
 	VolumeDetach(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// VolumeProjectSetWithBody Move volume to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+	VolumeProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VolumeProjectSet Move volume to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+	VolumeProjectSet(ctx context.Context, id string, body VolumeProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// VolumeResizeWithBody Grow a volume
 	//
 	// Grow only, online (works while attached). Enlarge the filesystem inside the guest afterwards.
@@ -9379,6 +9869,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /v1/volumes/{id}/resize (the `VolumeResize` operationId).
 	VolumeResize(ctx context.Context, id string, body VolumeResizeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VolumeTagsSetWithBody Replace volume tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+	VolumeTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// VolumeTagsSet Replace volume tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+	VolumeTagsSet(ctx context.Context, id string, body VolumeTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// WalletGet Wallet status
 	//
@@ -10814,6 +11322,44 @@ func (c *Client) AppMetrics(ctx context.Context, code string, params *AppMetrics
 	return c.Client.Do(req)
 }
 
+// AppProjectSetWithBody Move app to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+func (c *Client) AppProjectSetWithBody(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppProjectSetRequestWithBody(c.Server, code, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppProjectSet Move app to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+func (c *Client) AppProjectSet(ctx context.Context, code string, body AppProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppProjectSetRequest(c.Server, code, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // AppReleasesList Release history
 //
 // What this app has served, newest first, with the commit each version came from where there was one.
@@ -11011,6 +11557,44 @@ func (c *Client) AppSourceSetWithBody(ctx context.Context, code string, contentT
 // Corresponds with PUT /v1/apps/{code}/source (the `AppSourceSet` operationId).
 func (c *Client) AppSourceSet(ctx context.Context, code string, body AppSourceSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAppSourceSetRequest(c.Server, code, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppTagsSetWithBody Replace app tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+func (c *Client) AppTagsSetWithBody(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppTagsSetRequestWithBody(c.Server, code, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AppTagsSet Replace app tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+func (c *Client) AppTagsSet(ctx context.Context, code string, body AppTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAppTagsSetRequest(c.Server, code, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11664,6 +12248,44 @@ func (c *Client) DatabaseDbCreate(ctx context.Context, databaseID string, body D
 	return c.Client.Do(req)
 }
 
+// DatabaseProjectSetWithBody Move database to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+func (c *Client) DatabaseProjectSetWithBody(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDatabaseProjectSetRequestWithBody(c.Server, databaseID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DatabaseProjectSet Move database to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+func (c *Client) DatabaseProjectSet(ctx context.Context, databaseID string, body DatabaseProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDatabaseProjectSetRequest(c.Server, databaseID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // DatabasePublicAccessSetWithBody Toggle public access
 //
 // Off by default. On admits ONLY the trusted-sources list, never the whole internet.
@@ -11730,6 +12352,44 @@ func (c *Client) DatabaseRestoreCreateWithBody(ctx context.Context, databaseID s
 // Corresponds with POST /v1/databases/{databaseID}/restores (the `DatabaseRestoreCreate` operationId).
 func (c *Client) DatabaseRestoreCreate(ctx context.Context, databaseID string, body DatabaseRestoreCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDatabaseRestoreCreateRequest(c.Server, databaseID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DatabaseTagsSetWithBody Replace database tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+func (c *Client) DatabaseTagsSetWithBody(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDatabaseTagsSetRequestWithBody(c.Server, databaseID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DatabaseTagsSet Replace database tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+func (c *Client) DatabaseTagsSet(ctx context.Context, databaseID string, body DatabaseTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDatabaseTagsSetRequest(c.Server, databaseID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -12044,6 +12704,44 @@ func (c *Client) DnsZoneGet(ctx context.Context, id string, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
+// DnsZoneProjectSetWithBody Move DNS zone to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+func (c *Client) DnsZoneProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDnsZoneProjectSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DnsZoneProjectSet Move DNS zone to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+func (c *Client) DnsZoneProjectSet(ctx context.Context, id string, body DnsZoneProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDnsZoneProjectSetRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // DnsRecordCreateWithBody Add DNS record
 //
 // Takes any type of body and a specified content type.
@@ -12117,6 +12815,44 @@ func (c *Client) DnsRecordUpdateWithBody(ctx context.Context, id string, recordI
 // Corresponds with PATCH /v1/dns/zones/{id}/records/{recordId} (the `DnsRecordUpdate` operationId).
 func (c *Client) DnsRecordUpdate(ctx context.Context, id string, recordId string, body DnsRecordUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDnsRecordUpdateRequest(c.Server, id, recordId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DnsZoneTagsSetWithBody Replace DNS zone tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+func (c *Client) DnsZoneTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDnsZoneTagsSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DnsZoneTagsSet Replace DNS zone tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+func (c *Client) DnsZoneTagsSet(ctx context.Context, id string, body DnsZoneTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDnsZoneTagsSetRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -12565,6 +13301,44 @@ func (c *Client) DomainPrivacySet(ctx context.Context, id string, body DomainPri
 	return c.Client.Do(req)
 }
 
+// DomainProjectSetWithBody Move domain to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+func (c *Client) DomainProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDomainProjectSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DomainProjectSet Move domain to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+func (c *Client) DomainProjectSet(ctx context.Context, id string, body DomainProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDomainProjectSetRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // DomainRenewWithBody Renew a domain
 //
 // Charges the wallet and extends the registration. Automatic renewal does the same thing on your behalf 14 days before expiry.
@@ -12593,6 +13367,44 @@ func (c *Client) DomainRenewWithBody(ctx context.Context, id string, contentType
 // Corresponds with POST /v1/domains/{id}/renew (the `DomainRenew` operationId).
 func (c *Client) DomainRenew(ctx context.Context, id string, body DomainRenewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDomainRenewRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DomainTagsSetWithBody Replace domain tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+func (c *Client) DomainTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDomainTagsSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DomainTagsSet Replace domain tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+func (c *Client) DomainTagsSet(ctx context.Context, id string, body DomainTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDomainTagsSetRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -13360,6 +14172,44 @@ func (c *Client) LoadBalancerBackendsSet(ctx context.Context, loadBalancerID str
 	return c.Client.Do(req)
 }
 
+// LoadBalancerProjectSetWithBody Move load balancer to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+func (c *Client) LoadBalancerProjectSetWithBody(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadBalancerProjectSetRequestWithBody(c.Server, loadBalancerID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoadBalancerProjectSet Move load balancer to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+func (c *Client) LoadBalancerProjectSet(ctx context.Context, loadBalancerID string, body LoadBalancerProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadBalancerProjectSetRequest(c.Server, loadBalancerID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // LoadBalancerRulesReplaceWithBody Replace forwarding rules
 //
 // Full replace; the new configuration is applied to the data plane asynchronously.
@@ -13388,6 +14238,44 @@ func (c *Client) LoadBalancerRulesReplaceWithBody(ctx context.Context, loadBalan
 // Corresponds with PUT /v1/load-balancers/{loadBalancerID}/rules (the `LoadBalancerRulesReplace` operationId).
 func (c *Client) LoadBalancerRulesReplace(ctx context.Context, loadBalancerID string, body LoadBalancerRulesReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewLoadBalancerRulesReplaceRequest(c.Server, loadBalancerID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoadBalancerTagsSetWithBody Replace load balancer tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+func (c *Client) LoadBalancerTagsSetWithBody(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadBalancerTagsSetRequestWithBody(c.Server, loadBalancerID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// LoadBalancerTagsSet Replace load balancer tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+func (c *Client) LoadBalancerTagsSet(ctx context.Context, loadBalancerID string, body LoadBalancerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLoadBalancerTagsSetRequest(c.Server, loadBalancerID, body)
 	if err != nil {
 		return nil, err
 	}
@@ -13473,6 +14361,82 @@ func (c *Client) NetworkDelete(ctx context.Context, id string, reqEditors ...Req
 // Corresponds with GET /v1/networks/{id} (the `NetworkGet` operationId).
 func (c *Client) NetworkGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewNetworkGetRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NetworkProjectSetWithBody Move private network to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+func (c *Client) NetworkProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNetworkProjectSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NetworkProjectSet Move private network to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+func (c *Client) NetworkProjectSet(ctx context.Context, id string, body NetworkProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNetworkProjectSetRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NetworkTagsSetWithBody Replace private network tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+func (c *Client) NetworkTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNetworkTagsSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// NetworkTagsSet Replace private network tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+func (c *Client) NetworkTagsSet(ctx context.Context, id string, body NetworkTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewNetworkTagsSetRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -14686,6 +15650,8 @@ func (c *Client) ServerPasswordReset(ctx context.Context, id string, reqEditors 
 
 // ServerProjectSetWithBody Move server to a project
 //
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
 // Takes any type of body and a specified content type.
 //
 // Corresponds with PATCH /v1/servers/{id}/project (the `ServerProjectSet` operationId).
@@ -14702,6 +15668,8 @@ func (c *Client) ServerProjectSetWithBody(ctx context.Context, id string, conten
 }
 
 // ServerProjectSet Move server to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -14926,6 +15894,44 @@ func (c *Client) ServerSnapshotRestore(ctx context.Context, id string, snapshotI
 	return c.Client.Do(req)
 }
 
+// ServerTagsSetWithBody Replace server tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+func (c *Client) ServerTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewServerTagsSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ServerTagsSet Replace server tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+func (c *Client) ServerTagsSet(ctx context.Context, id string, body ServerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewServerTagsSetRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ServerSnapshotListAll All restorable snapshots (global snapshots page)
 //
 // Corresponds with GET /v1/snapshots (the `ServerSnapshotListAll` operationId).
@@ -15012,6 +16018,23 @@ func (c *Client) SshKeyDelete(ctx context.Context, id string, reqEditors ...Requ
 // Corresponds with GET /v1/ssh-keys/{id} (the `SshKeyGet` operationId).
 func (c *Client) SshKeyGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSshKeyGetRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// TagsList Tags in use
+//
+// Every tag this organization has used, with how many resources carry it. Tags are created by using them: there is no endpoint that makes one, and one stops existing when the last resource drops it.
+//
+// Corresponds with GET /v1/tags (the `TagsList` operationId).
+func (c *Client) TagsList(ctx context.Context, params *TagsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTagsListRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -15326,6 +16349,44 @@ func (c *Client) VolumeDetach(ctx context.Context, id string, reqEditors ...Requ
 	return c.Client.Do(req)
 }
 
+// VolumeProjectSetWithBody Move volume to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+func (c *Client) VolumeProjectSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVolumeProjectSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// VolumeProjectSet Move volume to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+func (c *Client) VolumeProjectSet(ctx context.Context, id string, body VolumeProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVolumeProjectSetRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // VolumeResizeWithBody Grow a volume
 //
 // Grow only, online (works while attached). Enlarge the filesystem inside the guest afterwards.
@@ -15354,6 +16415,44 @@ func (c *Client) VolumeResizeWithBody(ctx context.Context, id string, contentTyp
 // Corresponds with POST /v1/volumes/{id}/resize (the `VolumeResize` operationId).
 func (c *Client) VolumeResize(ctx context.Context, id string, body VolumeResizeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewVolumeResizeRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// VolumeTagsSetWithBody Replace volume tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+func (c *Client) VolumeTagsSetWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVolumeTagsSetRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// VolumeTagsSet Replace volume tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+func (c *Client) VolumeTagsSet(ctx context.Context, id string, body VolumeTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewVolumeTagsSetRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -16537,6 +17636,30 @@ func NewAppsListRequest(server string, params *AppsListParams) (*http.Request, e
 		// styled parameters, preserving literal commas as delimiters
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
+
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
 
 		if params.Limit != nil {
 
@@ -17722,6 +18845,53 @@ func NewAppMetricsRequest(server string, code string, params *AppMetricsParams) 
 	return req, nil
 }
 
+// NewAppProjectSetRequest calls the generic AppProjectSet builder with application/json body
+func NewAppProjectSetRequest(server string, code string, body AppProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppProjectSetRequestWithBody(server, code, "application/json", bodyReader)
+}
+
+// NewAppProjectSetRequestWithBody constructs an http.Request for the AppProjectSet method, with any body, and a specified content type
+func NewAppProjectSetRequestWithBody(server string, code string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "code", code, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/apps/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewAppReleasesListRequest constructs an http.Request for the AppReleasesList method
 func NewAppReleasesListRequest(server string, code string) (*http.Request, error) {
 	var err error
@@ -17972,6 +19142,53 @@ func NewAppSourceSetRequestWithBody(server string, code string, contentType stri
 	}
 
 	operationPath := fmt.Sprintf("/v1/apps/%s/source", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewAppTagsSetRequest calls the generic AppTagsSet builder with application/json body
+func NewAppTagsSetRequest(server string, code string, body AppTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAppTagsSetRequestWithBody(server, code, "application/json", bodyReader)
+}
+
+// NewAppTagsSetRequestWithBody constructs an http.Request for the AppTagsSet method, with any body, and a specified content type
+func NewAppTagsSetRequestWithBody(server string, code string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "code", code, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/apps/%s/tags", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -18818,6 +20035,30 @@ func NewDatabasesListRequest(server string, params *DatabasesListParams) (*http.
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int32"}); err != nil {
@@ -19128,6 +20369,53 @@ func NewDatabaseDbCreateRequestWithBody(server string, databaseID string, conten
 	return req, nil
 }
 
+// NewDatabaseProjectSetRequest calls the generic DatabaseProjectSet builder with application/json body
+func NewDatabaseProjectSetRequest(server string, databaseID string, body DatabaseProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDatabaseProjectSetRequestWithBody(server, databaseID, "application/json", bodyReader)
+}
+
+// NewDatabaseProjectSetRequestWithBody constructs an http.Request for the DatabaseProjectSet method, with any body, and a specified content type
+func NewDatabaseProjectSetRequestWithBody(server string, databaseID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "databaseID", databaseID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/databases/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDatabasePublicAccessSetRequest calls the generic DatabasePublicAccessSet builder with application/json body
 func NewDatabasePublicAccessSetRequest(server string, databaseID string, body DatabasePublicAccessSetJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -19213,6 +20501,53 @@ func NewDatabaseRestoreCreateRequestWithBody(server string, databaseID string, c
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDatabaseTagsSetRequest calls the generic DatabaseTagsSet builder with application/json body
+func NewDatabaseTagsSetRequest(server string, databaseID string, body DatabaseTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDatabaseTagsSetRequestWithBody(server, databaseID, "application/json", bodyReader)
+}
+
+// NewDatabaseTagsSetRequestWithBody constructs an http.Request for the DatabaseTagsSet method, with any body, and a specified content type
+func NewDatabaseTagsSetRequestWithBody(server string, databaseID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "databaseID", databaseID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/databases/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -19656,6 +20991,30 @@ func NewDnsZonesListRequest(server string, params *DnsZonesListParams) (*http.Re
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int32"}); err != nil {
@@ -19817,6 +21176,53 @@ func NewDnsZoneGetRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewDnsZoneProjectSetRequest calls the generic DnsZoneProjectSet builder with application/json body
+func NewDnsZoneProjectSetRequest(server string, id string, body DnsZoneProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDnsZoneProjectSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewDnsZoneProjectSetRequestWithBody constructs an http.Request for the DnsZoneProjectSet method, with any body, and a specified content type
+func NewDnsZoneProjectSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/dns/zones/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDnsRecordCreateRequest calls the generic DnsRecordCreate builder with application/json body
 func NewDnsRecordCreateRequest(server string, id string, params *DnsRecordCreateParams, body DnsRecordCreateJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -19965,6 +21371,53 @@ func NewDnsRecordUpdateRequestWithBody(server string, id string, recordId string
 	}
 
 	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDnsZoneTagsSetRequest calls the generic DnsZoneTagsSet builder with application/json body
+func NewDnsZoneTagsSetRequest(server string, id string, body DnsZoneTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDnsZoneTagsSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewDnsZoneTagsSetRequestWithBody constructs an http.Request for the DnsZoneTagsSet method, with any body, and a specified content type
+func NewDnsZoneTagsSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/dns/zones/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -20203,6 +21656,30 @@ func NewDomainsListRequest(server string, params *DomainsListParams) (*http.Requ
 		// styled parameters, preserving literal commas as delimiters
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
+
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
 
 		if params.Limit != nil {
 
@@ -20623,6 +22100,53 @@ func NewDomainPrivacySetRequestWithBody(server string, id string, contentType st
 	return req, nil
 }
 
+// NewDomainProjectSetRequest calls the generic DomainProjectSet builder with application/json body
+func NewDomainProjectSetRequest(server string, id string, body DomainProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDomainProjectSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewDomainProjectSetRequestWithBody constructs an http.Request for the DomainProjectSet method, with any body, and a specified content type
+func NewDomainProjectSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/domains/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewDomainRenewRequest calls the generic DomainRenew builder with application/json body
 func NewDomainRenewRequest(server string, id string, body DomainRenewJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -20661,6 +22185,53 @@ func NewDomainRenewRequestWithBody(server string, id string, contentType string,
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDomainTagsSetRequest calls the generic DomainTagsSet builder with application/json body
+func NewDomainTagsSetRequest(server string, id string, body DomainTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDomainTagsSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewDomainTagsSetRequestWithBody constructs an http.Request for the DomainTagsSet method, with any body, and a specified content type
+func NewDomainTagsSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/domains/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -22020,6 +23591,30 @@ func NewLoadBalancersListRequest(server string, params *LoadBalancersListParams)
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int32"}); err != nil {
@@ -22228,6 +23823,53 @@ func NewLoadBalancerBackendsSetRequestWithBody(server string, loadBalancerID str
 	return req, nil
 }
 
+// NewLoadBalancerProjectSetRequest calls the generic LoadBalancerProjectSet builder with application/json body
+func NewLoadBalancerProjectSetRequest(server string, loadBalancerID string, body LoadBalancerProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoadBalancerProjectSetRequestWithBody(server, loadBalancerID, "application/json", bodyReader)
+}
+
+// NewLoadBalancerProjectSetRequestWithBody constructs an http.Request for the LoadBalancerProjectSet method, with any body, and a specified content type
+func NewLoadBalancerProjectSetRequestWithBody(server string, loadBalancerID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "loadBalancerID", loadBalancerID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/load-balancers/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewLoadBalancerRulesReplaceRequest calls the generic LoadBalancerRulesReplace builder with application/json body
 func NewLoadBalancerRulesReplaceRequest(server string, loadBalancerID string, body LoadBalancerRulesReplaceJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -22275,6 +23917,53 @@ func NewLoadBalancerRulesReplaceRequestWithBody(server string, loadBalancerID st
 	return req, nil
 }
 
+// NewLoadBalancerTagsSetRequest calls the generic LoadBalancerTagsSet builder with application/json body
+func NewLoadBalancerTagsSetRequest(server string, loadBalancerID string, body LoadBalancerTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLoadBalancerTagsSetRequestWithBody(server, loadBalancerID, "application/json", bodyReader)
+}
+
+// NewLoadBalancerTagsSetRequestWithBody constructs an http.Request for the LoadBalancerTagsSet method, with any body, and a specified content type
+func NewLoadBalancerTagsSetRequestWithBody(server string, loadBalancerID string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "loadBalancerID", loadBalancerID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/load-balancers/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewNetworksListRequest constructs an http.Request for the NetworksList method
 func NewNetworksListRequest(server string, params *NetworksListParams) (*http.Request, error) {
 	var err error
@@ -22302,6 +23991,30 @@ func NewNetworksListRequest(server string, params *NetworksListParams) (*http.Re
 		// styled parameters, preserving literal commas as delimiters
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
+
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
 
 		if params.Limit != nil {
 
@@ -22460,6 +24173,100 @@ func NewNetworkGetRequest(server string, id string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewNetworkProjectSetRequest calls the generic NetworkProjectSet builder with application/json body
+func NewNetworkProjectSetRequest(server string, id string, body NetworkProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNetworkProjectSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewNetworkProjectSetRequestWithBody constructs an http.Request for the NetworkProjectSet method, with any body, and a specified content type
+func NewNetworkProjectSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/networks/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewNetworkTagsSetRequest calls the generic NetworkTagsSet builder with application/json body
+func NewNetworkTagsSetRequest(server string, id string, body NetworkTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewNetworkTagsSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewNetworkTagsSetRequestWithBody constructs an http.Request for the NetworkTagsSet method, with any body, and a specified content type
+func NewNetworkTagsSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/networks/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -23627,6 +25434,30 @@ func NewServersListRequest(server string, params *ServersListParams) (*http.Requ
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.Search != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
@@ -23642,18 +25473,6 @@ func NewServersListRequest(server string, params *ServersListParams) (*http.Requ
 		if params.State != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Project != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -25285,6 +27104,53 @@ func NewServerSnapshotRestoreRequest(server string, id string, snapshotId string
 	return req, nil
 }
 
+// NewServerTagsSetRequest calls the generic ServerTagsSet builder with application/json body
+func NewServerTagsSetRequest(server string, id string, body ServerTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewServerTagsSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewServerTagsSetRequestWithBody constructs an http.Request for the ServerTagsSet method, with any body, and a specified content type
+func NewServerTagsSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/servers/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewServerSnapshotListAllRequest constructs an http.Request for the ServerSnapshotListAll method
 func NewServerSnapshotListAllRequest(server string, params *ServerSnapshotListAllParams) (*http.Request, error) {
 	var err error
@@ -25491,6 +27357,60 @@ func NewSshKeyGetRequest(server string, id string) (*http.Request, error) {
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTagsListRequest constructs an http.Request for the TagsList method
+func NewTagsListRequest(server string, params *TagsListParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/tags")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "kind", *params.Kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -25825,6 +27745,30 @@ func NewVolumeListRequest(server string, params *VolumeListParams) (*http.Reques
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
+		if params.Project != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "project", *params.Project, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Tag != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tag", *params.Tag, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.ServerId != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "server_id", *params.ServerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
@@ -26106,6 +28050,53 @@ func NewVolumeDetachRequest(server string, id string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewVolumeProjectSetRequest calls the generic VolumeProjectSet builder with application/json body
+func NewVolumeProjectSetRequest(server string, id string, body VolumeProjectSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewVolumeProjectSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewVolumeProjectSetRequestWithBody constructs an http.Request for the VolumeProjectSet method, with any body, and a specified content type
+func NewVolumeProjectSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/volumes/%s/project", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewVolumeResizeRequest calls the generic VolumeResize builder with application/json body
 func NewVolumeResizeRequest(server string, id string, body VolumeResizeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -26144,6 +28135,53 @@ func NewVolumeResizeRequestWithBody(server string, id string, contentType string
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewVolumeTagsSetRequest calls the generic VolumeTagsSet builder with application/json body
+func NewVolumeTagsSetRequest(server string, id string, body VolumeTagsSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewVolumeTagsSetRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewVolumeTagsSetRequestWithBody constructs an http.Request for the VolumeTagsSet method, with any body, and a specified content type
+func NewVolumeTagsSetRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/volumes/%s/tags", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -27114,6 +29152,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /v1/apps/{code}/metrics (the `AppMetrics` operationId).
 	AppMetricsWithResponse(ctx context.Context, code string, params *AppMetricsParams, reqEditors ...RequestEditorFn) (*AppMetricsResponse, error)
 
+	// AppProjectSetWithBodyWithResponse Move app to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+	AppProjectSetWithBodyWithResponse(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppProjectSetResponse, error)
+
+	// AppProjectSetWithResponse Move app to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+	AppProjectSetWithResponse(ctx context.Context, code string, body AppProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*AppProjectSetResponse, error)
+
 	// AppReleasesListWithResponse Release history
 	//
 	// What this app has served, newest first, with the commit each version came from where there was one.
@@ -27212,6 +29268,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /v1/apps/{code}/source (the `AppSourceSet` operationId).
 	AppSourceSetWithResponse(ctx context.Context, code string, body AppSourceSetJSONRequestBody, reqEditors ...RequestEditorFn) (*AppSourceSetResponse, error)
+
+	// AppTagsSetWithBodyWithResponse Replace app tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+	AppTagsSetWithBodyWithResponse(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppTagsSetResponse, error)
+
+	// AppTagsSetWithResponse Replace app tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+	AppTagsSetWithResponse(ctx context.Context, code string, body AppTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*AppTagsSetResponse, error)
 
 	// AuthImpersonateWithBodyWithResponse Exchange a staff impersonation grant for a session
 	//
@@ -27516,6 +29590,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /v1/databases/{databaseID}/dbs (the `DatabaseDbCreate` operationId).
 	DatabaseDbCreateWithResponse(ctx context.Context, databaseID string, body DatabaseDbCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseDbCreateResponse, error)
 
+	// DatabaseProjectSetWithBodyWithResponse Move database to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+	DatabaseProjectSetWithBodyWithResponse(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DatabaseProjectSetResponse, error)
+
+	// DatabaseProjectSetWithResponse Move database to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+	DatabaseProjectSetWithResponse(ctx context.Context, databaseID string, body DatabaseProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseProjectSetResponse, error)
+
 	// DatabasePublicAccessSetWithBodyWithResponse Toggle public access
 	//
 	// Off by default. On admits ONLY the trusted-sources list, never the whole internet.
@@ -27551,6 +29643,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /v1/databases/{databaseID}/restores (the `DatabaseRestoreCreate` operationId).
 	DatabaseRestoreCreateWithResponse(ctx context.Context, databaseID string, body DatabaseRestoreCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseRestoreCreateResponse, error)
+
+	// DatabaseTagsSetWithBodyWithResponse Replace database tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+	DatabaseTagsSetWithBodyWithResponse(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DatabaseTagsSetResponse, error)
+
+	// DatabaseTagsSetWithResponse Replace database tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+	DatabaseTagsSetWithResponse(ctx context.Context, databaseID string, body DatabaseTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseTagsSetResponse, error)
 
 	// DatabaseTrustedSourcesSetWithBodyWithResponse Set trusted sources
 	//
@@ -27692,6 +29802,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /v1/dns/zones/{id} (the `DnsZoneGet` operationId).
 	DnsZoneGetWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DnsZoneGetResponse, error)
 
+	// DnsZoneProjectSetWithBodyWithResponse Move DNS zone to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+	DnsZoneProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DnsZoneProjectSetResponse, error)
+
+	// DnsZoneProjectSetWithResponse Move DNS zone to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+	DnsZoneProjectSetWithResponse(ctx context.Context, id string, body DnsZoneProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DnsZoneProjectSetResponse, error)
+
 	// DnsRecordCreateWithBodyWithResponse Add DNS record
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -27726,6 +29854,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PATCH /v1/dns/zones/{id}/records/{recordId} (the `DnsRecordUpdate` operationId).
 	DnsRecordUpdateWithResponse(ctx context.Context, id string, recordId string, body DnsRecordUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*DnsRecordUpdateResponse, error)
+
+	// DnsZoneTagsSetWithBodyWithResponse Replace DNS zone tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+	DnsZoneTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DnsZoneTagsSetResponse, error)
+
+	// DnsZoneTagsSetWithResponse Replace DNS zone tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+	DnsZoneTagsSetWithResponse(ctx context.Context, id string, body DnsZoneTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DnsZoneTagsSetResponse, error)
 
 	// DomainContactsListWithResponse List registrant profiles
 	//
@@ -27937,6 +30083,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /v1/domains/{id}/privacy (the `DomainPrivacySet` operationId).
 	DomainPrivacySetWithResponse(ctx context.Context, id string, body DomainPrivacySetJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainPrivacySetResponse, error)
 
+	// DomainProjectSetWithBodyWithResponse Move domain to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+	DomainProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DomainProjectSetResponse, error)
+
+	// DomainProjectSetWithResponse Move domain to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+	DomainProjectSetWithResponse(ctx context.Context, id string, body DomainProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainProjectSetResponse, error)
+
 	// DomainRenewWithBodyWithResponse Renew a domain
 	//
 	// Charges the wallet and extends the registration. Automatic renewal does the same thing on your behalf 14 days before expiry.
@@ -27954,6 +30118,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /v1/domains/{id}/renew (the `DomainRenew` operationId).
 	DomainRenewWithResponse(ctx context.Context, id string, body DomainRenewJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainRenewResponse, error)
+
+	// DomainTagsSetWithBodyWithResponse Replace domain tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+	DomainTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DomainTagsSetResponse, error)
+
+	// DomainTagsSetWithResponse Replace domain tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+	DomainTagsSetWithResponse(ctx context.Context, id string, body DomainTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainTagsSetResponse, error)
 
 	// AccountFeaturesWithResponse Which products are available to you
 	//
@@ -28316,6 +30498,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/backends (the `LoadBalancerBackendsSet` operationId).
 	LoadBalancerBackendsSetWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerBackendsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerBackendsSetResponse, error)
 
+	// LoadBalancerProjectSetWithBodyWithResponse Move load balancer to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+	LoadBalancerProjectSetWithBodyWithResponse(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadBalancerProjectSetResponse, error)
+
+	// LoadBalancerProjectSetWithResponse Move load balancer to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+	LoadBalancerProjectSetWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerProjectSetResponse, error)
+
 	// LoadBalancerRulesReplaceWithBodyWithResponse Replace forwarding rules
 	//
 	// Full replace; the new configuration is applied to the data plane asynchronously.
@@ -28333,6 +30533,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/rules (the `LoadBalancerRulesReplace` operationId).
 	LoadBalancerRulesReplaceWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerRulesReplaceJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerRulesReplaceResponse, error)
+
+	// LoadBalancerTagsSetWithBodyWithResponse Replace load balancer tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+	LoadBalancerTagsSetWithBodyWithResponse(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadBalancerTagsSetResponse, error)
+
+	// LoadBalancerTagsSetWithResponse Replace load balancer tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+	LoadBalancerTagsSetWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerTagsSetResponse, error)
 
 	// NetworksListWithResponse My private networks
 	//
@@ -28374,6 +30592,42 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /v1/networks/{id} (the `NetworkGet` operationId).
 	NetworkGetWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*NetworkGetResponse, error)
+
+	// NetworkProjectSetWithBodyWithResponse Move private network to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+	NetworkProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NetworkProjectSetResponse, error)
+
+	// NetworkProjectSetWithResponse Move private network to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+	NetworkProjectSetWithResponse(ctx context.Context, id string, body NetworkProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*NetworkProjectSetResponse, error)
+
+	// NetworkTagsSetWithBodyWithResponse Replace private network tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+	NetworkTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NetworkTagsSetResponse, error)
+
+	// NetworkTagsSetWithResponse Replace private network tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+	NetworkTagsSetWithResponse(ctx context.Context, id string, body NetworkTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*NetworkTagsSetResponse, error)
 
 	// NotificationsListWithResponse Notification feed
 	//
@@ -28930,12 +31184,16 @@ type ClientWithResponsesInterface interface {
 
 	// ServerProjectSetWithBodyWithResponse Move server to a project
 	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with PATCH /v1/servers/{id}/project (the `ServerProjectSet` operationId).
 	ServerProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ServerProjectSetResponse, error)
 
 	// ServerProjectSetWithResponse Move server to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -29042,6 +31300,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /v1/servers/{id}/snapshots/{snapshotId}/restore (the `ServerSnapshotRestore` operationId).
 	ServerSnapshotRestoreWithResponse(ctx context.Context, id string, snapshotId string, reqEditors ...RequestEditorFn) (*ServerSnapshotRestoreResponse, error)
 
+	// ServerTagsSetWithBodyWithResponse Replace server tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+	ServerTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ServerTagsSetResponse, error)
+
+	// ServerTagsSetWithResponse Replace server tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+	ServerTagsSetWithResponse(ctx context.Context, id string, body ServerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*ServerTagsSetResponse, error)
+
 	// ServerSnapshotListAllWithResponse All restorable snapshots (global snapshots page)
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -29085,6 +31361,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /v1/ssh-keys/{id} (the `SshKeyGet` operationId).
 	SshKeyGetWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*SshKeyGetResponse, error)
+
+	// TagsListWithResponse Tags in use
+	//
+	// Every tag this organization has used, with how many resources carry it. Tags are created by using them: there is no endpoint that makes one, and one stops existing when the last resource drops it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/tags (the `TagsList` operationId).
+	TagsListWithResponse(ctx context.Context, params *TagsListParams, reqEditors ...RequestEditorFn) (*TagsListResponse, error)
 
 	// TicketsListWithResponse List support tickets
 	//
@@ -29230,6 +31515,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /v1/volumes/{id}/detach (the `VolumeDetach` operationId).
 	VolumeDetachWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*VolumeDetachResponse, error)
 
+	// VolumeProjectSetWithBodyWithResponse Move volume to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+	VolumeProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VolumeProjectSetResponse, error)
+
+	// VolumeProjectSetWithResponse Move volume to a project
+	//
+	// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+	VolumeProjectSetWithResponse(ctx context.Context, id string, body VolumeProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*VolumeProjectSetResponse, error)
+
 	// VolumeResizeWithBodyWithResponse Grow a volume
 	//
 	// Grow only, online (works while attached). Enlarge the filesystem inside the guest afterwards.
@@ -29247,6 +31550,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /v1/volumes/{id}/resize (the `VolumeResize` operationId).
 	VolumeResizeWithResponse(ctx context.Context, id string, body VolumeResizeJSONRequestBody, reqEditors ...RequestEditorFn) (*VolumeResizeResponse, error)
+
+	// VolumeTagsSetWithBodyWithResponse Replace volume tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+	VolumeTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VolumeTagsSetResponse, error)
+
+	// VolumeTagsSetWithResponse Replace volume tags
+	//
+	// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+	VolumeTagsSetWithResponse(ctx context.Context, id string, body VolumeTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*VolumeTagsSetResponse, error)
 
 	// WalletGetWithResponse Wallet status
 	//
@@ -31981,6 +34302,47 @@ func (r AppMetricsResponse) ContentType() string {
 	return ""
 }
 
+type AppProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r AppProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AppProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type AppReleasesListResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -32263,6 +34625,54 @@ func (r AppSourceSetResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AppSourceSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AppTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AppTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r AppTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AppTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AppTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AppTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AppTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -33477,6 +35887,47 @@ func (r DatabaseDbCreateResponse) ContentType() string {
 	return ""
 }
 
+type DatabaseProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DatabaseProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DatabaseProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DatabaseProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DatabaseProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DatabaseProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DatabasePublicAccessSetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33560,6 +36011,54 @@ func (r DatabaseRestoreCreateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DatabaseRestoreCreateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DatabaseTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DatabaseTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DatabaseTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DatabaseTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DatabaseTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DatabaseTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DatabaseTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -34155,6 +36654,47 @@ func (r DnsZoneGetResponse) ContentType() string {
 	return ""
 }
 
+type DnsZoneProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DnsZoneProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DnsZoneProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DnsZoneProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DnsZoneProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DnsZoneProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DnsRecordCreateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -34286,6 +36826,54 @@ func (r DnsRecordUpdateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DnsRecordUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DnsZoneTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DnsZoneTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DnsZoneTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DnsZoneTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DnsZoneTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DnsZoneTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DnsZoneTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -35005,6 +37593,47 @@ func (r DomainPrivacySetResponse) ContentType() string {
 	return ""
 }
 
+type DomainProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DomainProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DomainProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DomainProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DomainProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DomainProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DomainRenewResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -35047,6 +37676,54 @@ func (r DomainRenewResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DomainRenewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DomainTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r DomainTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r DomainTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DomainTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DomainTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DomainTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DomainTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -36693,6 +39370,47 @@ func (r LoadBalancerBackendsSetResponse) ContentType() string {
 	return ""
 }
 
+type LoadBalancerProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r LoadBalancerProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r LoadBalancerProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r LoadBalancerProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoadBalancerProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r LoadBalancerProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type LoadBalancerRulesReplaceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -36728,6 +39446,54 @@ func (r LoadBalancerRulesReplaceResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r LoadBalancerRulesReplaceResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type LoadBalancerTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r LoadBalancerTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r LoadBalancerTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r LoadBalancerTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r LoadBalancerTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LoadBalancerTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r LoadBalancerTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -36913,6 +39679,95 @@ func (r NetworkGetResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r NetworkGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type NetworkProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r NetworkProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r NetworkProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r NetworkProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NetworkProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r NetworkProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type NetworkTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r NetworkTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r NetworkTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r NetworkTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r NetworkTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r NetworkTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r NetworkTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -40023,6 +42878,54 @@ func (r ServerSnapshotRestoreResponse) ContentType() string {
 	return ""
 }
 
+type ServerTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ServerTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r ServerTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ServerTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ServerTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ServerTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ServerTagsSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ServerSnapshotListAllResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -40250,6 +43153,54 @@ func (r SshKeyGetResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r SshKeyGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type TagsListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsListOutputBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r TagsListResponse) GetJSON200() *TagsListOutputBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r TagsListResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r TagsListResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r TagsListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TagsListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r TagsListResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -40917,6 +43868,47 @@ func (r VolumeDetachResponse) ContentType() string {
 	return ""
 }
 
+type VolumeProjectSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r VolumeProjectSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r VolumeProjectSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r VolumeProjectSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r VolumeProjectSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r VolumeProjectSetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type VolumeResizeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -40952,6 +43944,54 @@ func (r VolumeResizeResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r VolumeResizeResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type VolumeTagsSetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TagsBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r VolumeTagsSetResponse) GetJSON200() *TagsBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r VolumeTagsSetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r VolumeTagsSetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r VolumeTagsSetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r VolumeTagsSetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r VolumeTagsSetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -42351,6 +45391,36 @@ func (c *ClientWithResponses) AppMetricsWithResponse(ctx context.Context, code s
 	return ParseAppMetricsResponse(rsp)
 }
 
+// AppProjectSetWithBodyWithResponse Move app to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+func (c *ClientWithResponses) AppProjectSetWithBodyWithResponse(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppProjectSetResponse, error) {
+	rsp, err := c.AppProjectSetWithBody(ctx, code, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppProjectSetResponse(rsp)
+}
+
+// AppProjectSetWithResponse Move app to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/apps/{code}/project (the `AppProjectSet` operationId).
+func (c *ClientWithResponses) AppProjectSetWithResponse(ctx context.Context, code string, body AppProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*AppProjectSetResponse, error) {
+	rsp, err := c.AppProjectSet(ctx, code, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppProjectSetResponse(rsp)
+}
+
 // AppReleasesListWithResponse Release history
 //
 // What this app has served, newest first, with the commit each version came from where there was one.
@@ -42514,6 +45584,36 @@ func (c *ClientWithResponses) AppSourceSetWithResponse(ctx context.Context, code
 		return nil, err
 	}
 	return ParseAppSourceSetResponse(rsp)
+}
+
+// AppTagsSetWithBodyWithResponse Replace app tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+func (c *ClientWithResponses) AppTagsSetWithBodyWithResponse(ctx context.Context, code string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AppTagsSetResponse, error) {
+	rsp, err := c.AppTagsSetWithBody(ctx, code, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppTagsSetResponse(rsp)
+}
+
+// AppTagsSetWithResponse Replace app tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a app is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/apps/{code}/tags (the `AppTagsSet` operationId).
+func (c *ClientWithResponses) AppTagsSetWithResponse(ctx context.Context, code string, body AppTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*AppTagsSetResponse, error) {
+	rsp, err := c.AppTagsSet(ctx, code, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAppTagsSetResponse(rsp)
 }
 
 // AuthImpersonateWithBodyWithResponse Exchange a staff impersonation grant for a session
@@ -43041,6 +46141,36 @@ func (c *ClientWithResponses) DatabaseDbCreateWithResponse(ctx context.Context, 
 	return ParseDatabaseDbCreateResponse(rsp)
 }
 
+// DatabaseProjectSetWithBodyWithResponse Move database to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+func (c *ClientWithResponses) DatabaseProjectSetWithBodyWithResponse(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DatabaseProjectSetResponse, error) {
+	rsp, err := c.DatabaseProjectSetWithBody(ctx, databaseID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDatabaseProjectSetResponse(rsp)
+}
+
+// DatabaseProjectSetWithResponse Move database to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/databases/{databaseID}/project (the `DatabaseProjectSet` operationId).
+func (c *ClientWithResponses) DatabaseProjectSetWithResponse(ctx context.Context, databaseID string, body DatabaseProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseProjectSetResponse, error) {
+	rsp, err := c.DatabaseProjectSet(ctx, databaseID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDatabaseProjectSetResponse(rsp)
+}
+
 // DatabasePublicAccessSetWithBodyWithResponse Toggle public access
 //
 // Off by default. On admits ONLY the trusted-sources list, never the whole internet.
@@ -43099,6 +46229,36 @@ func (c *ClientWithResponses) DatabaseRestoreCreateWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParseDatabaseRestoreCreateResponse(rsp)
+}
+
+// DatabaseTagsSetWithBodyWithResponse Replace database tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+func (c *ClientWithResponses) DatabaseTagsSetWithBodyWithResponse(ctx context.Context, databaseID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DatabaseTagsSetResponse, error) {
+	rsp, err := c.DatabaseTagsSetWithBody(ctx, databaseID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDatabaseTagsSetResponse(rsp)
+}
+
+// DatabaseTagsSetWithResponse Replace database tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a database is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/databases/{databaseID}/tags (the `DatabaseTagsSet` operationId).
+func (c *ClientWithResponses) DatabaseTagsSetWithResponse(ctx context.Context, databaseID string, body DatabaseTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DatabaseTagsSetResponse, error) {
+	rsp, err := c.DatabaseTagsSet(ctx, databaseID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDatabaseTagsSetResponse(rsp)
 }
 
 // DatabaseTrustedSourcesSetWithBodyWithResponse Set trusted sources
@@ -43349,6 +46509,36 @@ func (c *ClientWithResponses) DnsZoneGetWithResponse(ctx context.Context, id str
 	return ParseDnsZoneGetResponse(rsp)
 }
 
+// DnsZoneProjectSetWithBodyWithResponse Move DNS zone to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+func (c *ClientWithResponses) DnsZoneProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DnsZoneProjectSetResponse, error) {
+	rsp, err := c.DnsZoneProjectSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDnsZoneProjectSetResponse(rsp)
+}
+
+// DnsZoneProjectSetWithResponse Move DNS zone to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/dns/zones/{id}/project (the `DnsZoneProjectSet` operationId).
+func (c *ClientWithResponses) DnsZoneProjectSetWithResponse(ctx context.Context, id string, body DnsZoneProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DnsZoneProjectSetResponse, error) {
+	rsp, err := c.DnsZoneProjectSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDnsZoneProjectSetResponse(rsp)
+}
+
 // DnsRecordCreateWithBodyWithResponse Add DNS record
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -43412,6 +46602,36 @@ func (c *ClientWithResponses) DnsRecordUpdateWithResponse(ctx context.Context, i
 		return nil, err
 	}
 	return ParseDnsRecordUpdateResponse(rsp)
+}
+
+// DnsZoneTagsSetWithBodyWithResponse Replace DNS zone tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+func (c *ClientWithResponses) DnsZoneTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DnsZoneTagsSetResponse, error) {
+	rsp, err := c.DnsZoneTagsSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDnsZoneTagsSetResponse(rsp)
+}
+
+// DnsZoneTagsSetWithResponse Replace DNS zone tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a DNS zone is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/dns/zones/{id}/tags (the `DnsZoneTagsSet` operationId).
+func (c *ClientWithResponses) DnsZoneTagsSetWithResponse(ctx context.Context, id string, body DnsZoneTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DnsZoneTagsSetResponse, error) {
+	rsp, err := c.DnsZoneTagsSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDnsZoneTagsSetResponse(rsp)
 }
 
 // DomainContactsListWithResponse List registrant profiles
@@ -43768,6 +46988,36 @@ func (c *ClientWithResponses) DomainPrivacySetWithResponse(ctx context.Context, 
 	return ParseDomainPrivacySetResponse(rsp)
 }
 
+// DomainProjectSetWithBodyWithResponse Move domain to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+func (c *ClientWithResponses) DomainProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DomainProjectSetResponse, error) {
+	rsp, err := c.DomainProjectSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDomainProjectSetResponse(rsp)
+}
+
+// DomainProjectSetWithResponse Move domain to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/domains/{id}/project (the `DomainProjectSet` operationId).
+func (c *ClientWithResponses) DomainProjectSetWithResponse(ctx context.Context, id string, body DomainProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainProjectSetResponse, error) {
+	rsp, err := c.DomainProjectSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDomainProjectSetResponse(rsp)
+}
+
 // DomainRenewWithBodyWithResponse Renew a domain
 //
 // Charges the wallet and extends the registration. Automatic renewal does the same thing on your behalf 14 days before expiry.
@@ -43796,6 +47046,36 @@ func (c *ClientWithResponses) DomainRenewWithResponse(ctx context.Context, id st
 		return nil, err
 	}
 	return ParseDomainRenewResponse(rsp)
+}
+
+// DomainTagsSetWithBodyWithResponse Replace domain tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+func (c *ClientWithResponses) DomainTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DomainTagsSetResponse, error) {
+	rsp, err := c.DomainTagsSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDomainTagsSetResponse(rsp)
+}
+
+// DomainTagsSetWithResponse Replace domain tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a domain is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/domains/{id}/tags (the `DomainTagsSet` operationId).
+func (c *ClientWithResponses) DomainTagsSetWithResponse(ctx context.Context, id string, body DomainTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*DomainTagsSetResponse, error) {
+	rsp, err := c.DomainTagsSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDomainTagsSetResponse(rsp)
 }
 
 // AccountFeaturesWithResponse Which products are available to you
@@ -44429,6 +47709,36 @@ func (c *ClientWithResponses) LoadBalancerBackendsSetWithResponse(ctx context.Co
 	return ParseLoadBalancerBackendsSetResponse(rsp)
 }
 
+// LoadBalancerProjectSetWithBodyWithResponse Move load balancer to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+func (c *ClientWithResponses) LoadBalancerProjectSetWithBodyWithResponse(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadBalancerProjectSetResponse, error) {
+	rsp, err := c.LoadBalancerProjectSetWithBody(ctx, loadBalancerID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadBalancerProjectSetResponse(rsp)
+}
+
+// LoadBalancerProjectSetWithResponse Move load balancer to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/load-balancers/{loadBalancerID}/project (the `LoadBalancerProjectSet` operationId).
+func (c *ClientWithResponses) LoadBalancerProjectSetWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerProjectSetResponse, error) {
+	rsp, err := c.LoadBalancerProjectSet(ctx, loadBalancerID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadBalancerProjectSetResponse(rsp)
+}
+
 // LoadBalancerRulesReplaceWithBodyWithResponse Replace forwarding rules
 //
 // Full replace; the new configuration is applied to the data plane asynchronously.
@@ -44457,6 +47767,36 @@ func (c *ClientWithResponses) LoadBalancerRulesReplaceWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseLoadBalancerRulesReplaceResponse(rsp)
+}
+
+// LoadBalancerTagsSetWithBodyWithResponse Replace load balancer tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+func (c *ClientWithResponses) LoadBalancerTagsSetWithBodyWithResponse(ctx context.Context, loadBalancerID string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LoadBalancerTagsSetResponse, error) {
+	rsp, err := c.LoadBalancerTagsSetWithBody(ctx, loadBalancerID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadBalancerTagsSetResponse(rsp)
+}
+
+// LoadBalancerTagsSetWithResponse Replace load balancer tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a load balancer is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/load-balancers/{loadBalancerID}/tags (the `LoadBalancerTagsSet` operationId).
+func (c *ClientWithResponses) LoadBalancerTagsSetWithResponse(ctx context.Context, loadBalancerID string, body LoadBalancerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*LoadBalancerTagsSetResponse, error) {
+	rsp, err := c.LoadBalancerTagsSet(ctx, loadBalancerID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLoadBalancerTagsSetResponse(rsp)
 }
 
 // NetworksListWithResponse My private networks
@@ -44528,6 +47868,66 @@ func (c *ClientWithResponses) NetworkGetWithResponse(ctx context.Context, id str
 		return nil, err
 	}
 	return ParseNetworkGetResponse(rsp)
+}
+
+// NetworkProjectSetWithBodyWithResponse Move private network to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+func (c *ClientWithResponses) NetworkProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NetworkProjectSetResponse, error) {
+	rsp, err := c.NetworkProjectSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNetworkProjectSetResponse(rsp)
+}
+
+// NetworkProjectSetWithResponse Move private network to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/networks/{id}/project (the `NetworkProjectSet` operationId).
+func (c *ClientWithResponses) NetworkProjectSetWithResponse(ctx context.Context, id string, body NetworkProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*NetworkProjectSetResponse, error) {
+	rsp, err := c.NetworkProjectSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNetworkProjectSetResponse(rsp)
+}
+
+// NetworkTagsSetWithBodyWithResponse Replace private network tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+func (c *ClientWithResponses) NetworkTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NetworkTagsSetResponse, error) {
+	rsp, err := c.NetworkTagsSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNetworkTagsSetResponse(rsp)
+}
+
+// NetworkTagsSetWithResponse Replace private network tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a private network is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/networks/{id}/tags (the `NetworkTagsSet` operationId).
+func (c *ClientWithResponses) NetworkTagsSetWithResponse(ctx context.Context, id string, body NetworkTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*NetworkTagsSetResponse, error) {
+	rsp, err := c.NetworkTagsSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseNetworkTagsSetResponse(rsp)
 }
 
 // NotificationsListWithResponse Notification feed
@@ -45523,6 +48923,8 @@ func (c *ClientWithResponses) ServerPasswordResetWithResponse(ctx context.Contex
 
 // ServerProjectSetWithBodyWithResponse Move server to a project
 //
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
 // Corresponds with PATCH /v1/servers/{id}/project (the `ServerProjectSet` operationId).
@@ -45535,6 +48937,8 @@ func (c *ClientWithResponses) ServerProjectSetWithBodyWithResponse(ctx context.C
 }
 
 // ServerProjectSetWithResponse Move server to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -45719,6 +49123,36 @@ func (c *ClientWithResponses) ServerSnapshotRestoreWithResponse(ctx context.Cont
 	return ParseServerSnapshotRestoreResponse(rsp)
 }
 
+// ServerTagsSetWithBodyWithResponse Replace server tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+func (c *ClientWithResponses) ServerTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ServerTagsSetResponse, error) {
+	rsp, err := c.ServerTagsSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseServerTagsSetResponse(rsp)
+}
+
+// ServerTagsSetWithResponse Replace server tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a server is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/servers/{id}/tags (the `ServerTagsSet` operationId).
+func (c *ClientWithResponses) ServerTagsSetWithResponse(ctx context.Context, id string, body ServerTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*ServerTagsSetResponse, error) {
+	rsp, err := c.ServerTagsSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseServerTagsSetResponse(rsp)
+}
+
 // ServerSnapshotListAllWithResponse All restorable snapshots (global snapshots page)
 //
 // Returns a wrapper object for the known response body format(s).
@@ -45797,6 +49231,21 @@ func (c *ClientWithResponses) SshKeyGetWithResponse(ctx context.Context, id stri
 		return nil, err
 	}
 	return ParseSshKeyGetResponse(rsp)
+}
+
+// TagsListWithResponse Tags in use
+//
+// Every tag this organization has used, with how many resources carry it. Tags are created by using them: there is no endpoint that makes one, and one stops existing when the last resource drops it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/tags (the `TagsList` operationId).
+func (c *ClientWithResponses) TagsListWithResponse(ctx context.Context, params *TagsListParams, reqEditors ...RequestEditorFn) (*TagsListResponse, error) {
+	rsp, err := c.TagsList(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTagsListResponse(rsp)
 }
 
 // TicketsListWithResponse List support tickets
@@ -46051,6 +49500,36 @@ func (c *ClientWithResponses) VolumeDetachWithResponse(ctx context.Context, id s
 	return ParseVolumeDetachResponse(rsp)
 }
 
+// VolumeProjectSetWithBodyWithResponse Move volume to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+func (c *ClientWithResponses) VolumeProjectSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VolumeProjectSetResponse, error) {
+	rsp, err := c.VolumeProjectSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVolumeProjectSetResponse(rsp)
+}
+
+// VolumeProjectSetWithResponse Move volume to a project
+//
+// A resource belongs to at most one project. Omit project_id to detach it from all of them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /v1/volumes/{id}/project (the `VolumeProjectSet` operationId).
+func (c *ClientWithResponses) VolumeProjectSetWithResponse(ctx context.Context, id string, body VolumeProjectSetJSONRequestBody, reqEditors ...RequestEditorFn) (*VolumeProjectSetResponse, error) {
+	rsp, err := c.VolumeProjectSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVolumeProjectSetResponse(rsp)
+}
+
 // VolumeResizeWithBodyWithResponse Grow a volume
 //
 // Grow only, online (works while attached). Enlarge the filesystem inside the guest afterwards.
@@ -46079,6 +49558,36 @@ func (c *ClientWithResponses) VolumeResizeWithResponse(ctx context.Context, id s
 		return nil, err
 	}
 	return ParseVolumeResizeResponse(rsp)
+}
+
+// VolumeTagsSetWithBodyWithResponse Replace volume tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+func (c *ClientWithResponses) VolumeTagsSetWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VolumeTagsSetResponse, error) {
+	rsp, err := c.VolumeTagsSetWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVolumeTagsSetResponse(rsp)
+}
+
+// VolumeTagsSetWithResponse Replace volume tags
+//
+// Replaces the whole tag set. Tags group resources across projects: a volume is in at most one project but may wear many tags, and every list endpoint can filter on them.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /v1/volumes/{id}/tags (the `VolumeTagsSet` operationId).
+func (c *ClientWithResponses) VolumeTagsSetWithResponse(ctx context.Context, id string, body VolumeTagsSetJSONRequestBody, reqEditors ...RequestEditorFn) (*VolumeTagsSetResponse, error) {
+	rsp, err := c.VolumeTagsSet(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseVolumeTagsSetResponse(rsp)
 }
 
 // WalletGetWithResponse Wallet status
@@ -48021,6 +51530,35 @@ func ParseAppMetricsResponse(rsp *http.Response) (*AppMetricsResponse, error) {
 	return response, nil
 }
 
+// ParseAppProjectSetResponse parses an HTTP response from a AppProjectSetWithResponse call
+func ParseAppProjectSetResponse(rsp *http.Response) (*AppProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseAppReleasesListResponse parses an HTTP response from a AppReleasesListWithResponse call
 func ParseAppReleasesListResponse(rsp *http.Response) (*AppReleasesListResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -48202,6 +51740,39 @@ func ParseAppSourceSetResponse(rsp *http.Response) (*AppSourceSetResponse, error
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAppTagsSetResponse parses an HTTP response from a AppTagsSetWithResponse call
+func ParseAppTagsSetResponse(rsp *http.Response) (*AppTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AppTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -49121,6 +52692,35 @@ func ParseDatabaseDbCreateResponse(rsp *http.Response) (*DatabaseDbCreateRespons
 	return response, nil
 }
 
+// ParseDatabaseProjectSetResponse parses an HTTP response from a DatabaseProjectSetWithResponse call
+func ParseDatabaseProjectSetResponse(rsp *http.Response) (*DatabaseProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DatabaseProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDatabasePublicAccessSetResponse parses an HTTP response from a DatabasePublicAccessSetWithResponse call
 func ParseDatabasePublicAccessSetResponse(rsp *http.Response) (*DatabasePublicAccessSetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -49170,6 +52770,39 @@ func ParseDatabaseRestoreCreateResponse(rsp *http.Response) (*DatabaseRestoreCre
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDatabaseTagsSetResponse parses an HTTP response from a DatabaseTagsSetWithResponse call
+func ParseDatabaseTagsSetResponse(rsp *http.Response) (*DatabaseTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DatabaseTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
@@ -49592,6 +53225,35 @@ func ParseDnsZoneGetResponse(rsp *http.Response) (*DnsZoneGetResponse, error) {
 	return response, nil
 }
 
+// ParseDnsZoneProjectSetResponse parses an HTTP response from a DnsZoneProjectSetWithResponse call
+func ParseDnsZoneProjectSetResponse(rsp *http.Response) (*DnsZoneProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DnsZoneProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDnsRecordCreateResponse parses an HTTP response from a DnsRecordCreateWithResponse call
 func ParseDnsRecordCreateResponse(rsp *http.Response) (*DnsRecordCreateResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -49670,6 +53332,39 @@ func ParseDnsRecordUpdateResponse(rsp *http.Response) (*DnsRecordUpdateResponse,
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DnsRecordBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDnsZoneTagsSetResponse parses an HTTP response from a DnsZoneTagsSetWithResponse call
+func ParseDnsZoneTagsSetResponse(rsp *http.Response) (*DnsZoneTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DnsZoneTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -50178,6 +53873,35 @@ func ParseDomainPrivacySetResponse(rsp *http.Response) (*DomainPrivacySetRespons
 	return response, nil
 }
 
+// ParseDomainProjectSetResponse parses an HTTP response from a DomainProjectSetWithResponse call
+func ParseDomainProjectSetResponse(rsp *http.Response) (*DomainProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DomainProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDomainRenewResponse parses an HTTP response from a DomainRenewWithResponse call
 func ParseDomainRenewResponse(rsp *http.Response) (*DomainRenewResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -50194,6 +53918,39 @@ func ParseDomainRenewResponse(rsp *http.Response) (*DomainRenewResponse, error) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DomainOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDomainTagsSetResponse parses an HTTP response from a DomainTagsSetWithResponse call
+func ParseDomainTagsSetResponse(rsp *http.Response) (*DomainTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DomainTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -51395,6 +55152,35 @@ func ParseLoadBalancerBackendsSetResponse(rsp *http.Response) (*LoadBalancerBack
 	return response, nil
 }
 
+// ParseLoadBalancerProjectSetResponse parses an HTTP response from a LoadBalancerProjectSetWithResponse call
+func ParseLoadBalancerProjectSetResponse(rsp *http.Response) (*LoadBalancerProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoadBalancerProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseLoadBalancerRulesReplaceResponse parses an HTTP response from a LoadBalancerRulesReplaceWithResponse call
 func ParseLoadBalancerRulesReplaceResponse(rsp *http.Response) (*LoadBalancerRulesReplaceResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -51411,6 +55197,39 @@ func ParseLoadBalancerRulesReplaceResponse(rsp *http.Response) (*LoadBalancerRul
 	switch {
 	case rsp.StatusCode == 202:
 		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLoadBalancerTagsSetResponse parses an HTTP response from a LoadBalancerTagsSetWithResponse call
+func ParseLoadBalancerTagsSetResponse(rsp *http.Response) (*LoadBalancerTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LoadBalancerTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
@@ -51535,6 +55354,68 @@ func ParseNetworkGetResponse(rsp *http.Response) (*NetworkGetResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest NetworkGetOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNetworkProjectSetResponse parses an HTTP response from a NetworkProjectSetWithResponse call
+func ParseNetworkProjectSetResponse(rsp *http.Response) (*NetworkProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NetworkProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseNetworkTagsSetResponse parses an HTTP response from a NetworkTagsSetWithResponse call
+func ParseNetworkTagsSetResponse(rsp *http.Response) (*NetworkTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &NetworkTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -53699,6 +57580,39 @@ func ParseServerSnapshotRestoreResponse(rsp *http.Response) (*ServerSnapshotRest
 	return response, nil
 }
 
+// ParseServerTagsSetResponse parses an HTTP response from a ServerTagsSetWithResponse call
+func ParseServerTagsSetResponse(rsp *http.Response) (*ServerTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ServerTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseServerSnapshotListAllResponse parses an HTTP response from a ServerSnapshotListAllWithResponse call
 func ParseServerSnapshotListAllResponse(rsp *http.Response) (*ServerSnapshotListAllResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -53843,6 +57757,39 @@ func ParseSshKeyGetResponse(rsp *http.Response) (*SshKeyGetResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SshKeyBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTagsListResponse parses an HTTP response from a TagsListWithResponse call
+func ParseTagsListResponse(rsp *http.Response) (*TagsListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TagsListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsListOutputBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -54344,6 +58291,35 @@ func ParseVolumeDetachResponse(rsp *http.Response) (*VolumeDetachResponse, error
 	return response, nil
 }
 
+// ParseVolumeProjectSetResponse parses an HTTP response from a VolumeProjectSetWithResponse call
+func ParseVolumeProjectSetResponse(rsp *http.Response) (*VolumeProjectSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &VolumeProjectSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseVolumeResizeResponse parses an HTTP response from a VolumeResizeWithResponse call
 func ParseVolumeResizeResponse(rsp *http.Response) (*VolumeResizeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -54360,6 +58336,39 @@ func ParseVolumeResizeResponse(rsp *http.Response) (*VolumeResizeResponse, error
 	switch {
 	case rsp.StatusCode == 202:
 		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseVolumeTagsSetResponse parses an HTTP response from a VolumeTagsSetWithResponse call
+func ParseVolumeTagsSetResponse(rsp *http.Response) (*VolumeTagsSetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &VolumeTagsSetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TagsBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel

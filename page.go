@@ -155,9 +155,15 @@ func VolumesOnServer(id string) VolumeListOption {
 }
 
 // Networks walks every private network in the organization.
-func (c *Client) Networks(ctx context.Context) iter.Seq2[fbapi.NetworkBody, error] {
+func (c *Client) Networks(ctx context.Context, opts ...NetworkListOption) iter.Seq2[fbapi.NetworkBody, error] {
+	var p fbapi.NetworksListParams
+	for _, o := range opts {
+		o(&p)
+	}
 	return iterate(ctx, func(ctx context.Context, limit, offset int32) (listPage[fbapi.NetworkBody], error) {
-		resp, err := c.API.NetworksListWithResponse(ctx, &fbapi.NetworksListParams{Limit: &limit, Offset: &offset})
+		q := p
+		q.Limit, q.Offset = &limit, &offset
+		resp, err := c.API.NetworksListWithResponse(ctx, &q)
 		if err != nil {
 			return listPage[fbapi.NetworkBody]{}, err
 		}
@@ -173,9 +179,15 @@ func (c *Client) Networks(ctx context.Context) iter.Seq2[fbapi.NetworkBody, erro
 }
 
 // Databases walks every managed database instance in the organization.
-func (c *Client) Databases(ctx context.Context) iter.Seq2[fbapi.DatabaseBody, error] {
+func (c *Client) Databases(ctx context.Context, opts ...DatabaseListOption) iter.Seq2[fbapi.DatabaseBody, error] {
+	var p fbapi.DatabasesListParams
+	for _, o := range opts {
+		o(&p)
+	}
 	return iterate(ctx, func(ctx context.Context, limit, offset int32) (listPage[fbapi.DatabaseBody], error) {
-		resp, err := c.API.DatabasesListWithResponse(ctx, &fbapi.DatabasesListParams{Limit: &limit, Offset: &offset})
+		q := p
+		q.Limit, q.Offset = &limit, &offset
+		resp, err := c.API.DatabasesListWithResponse(ctx, &q)
 		if err != nil {
 			return listPage[fbapi.DatabaseBody]{}, err
 		}
@@ -191,9 +203,15 @@ func (c *Client) Databases(ctx context.Context) iter.Seq2[fbapi.DatabaseBody, er
 }
 
 // LoadBalancers walks every load balancer in the organization.
-func (c *Client) LoadBalancers(ctx context.Context) iter.Seq2[fbapi.LoadBalancerBody, error] {
+func (c *Client) LoadBalancers(ctx context.Context, opts ...LoadBalancerListOption) iter.Seq2[fbapi.LoadBalancerBody, error] {
+	var p fbapi.LoadBalancersListParams
+	for _, o := range opts {
+		o(&p)
+	}
 	return iterate(ctx, func(ctx context.Context, limit, offset int32) (listPage[fbapi.LoadBalancerBody], error) {
-		resp, err := c.API.LoadBalancersListWithResponse(ctx, &fbapi.LoadBalancersListParams{Limit: &limit, Offset: &offset})
+		q := p
+		q.Limit, q.Offset = &limit, &offset
+		resp, err := c.API.LoadBalancersListWithResponse(ctx, &q)
 		if err != nil {
 			return listPage[fbapi.LoadBalancerBody]{}, err
 		}

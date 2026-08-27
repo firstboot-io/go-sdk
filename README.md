@@ -107,6 +107,24 @@ There is deliberately no `Isos` iterator: `GET /v1/isos` takes no `limit` and
 `offset` and answers with the whole list, so a paged walk over it would be an
 invention rather than a convenience.
 
+**Selecting a set, not a page.** Every groupable kind has a walk that takes the
+two grouping filters, applied by the API before paging so a filtered walk
+narrows the whole account:
+
+```go
+var backends []string
+for srv, err := range c.Servers(ctx, firstboot.ServersWithTags("role:web")) {
+        if err != nil {
+                return err
+        }
+        backends = append(backends, srv.Id)
+}
+```
+
+Repeating a tag NARROWS: the filter is a containment test, so two tags mean
+both. `…InProject("none")` asks the different question "in no project at all",
+which a UUID cannot spell.
+
 ## Scope
 
 Only the customer surface. The staff endpoints under `/admin/v1/` authenticate
