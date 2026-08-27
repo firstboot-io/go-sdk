@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // What this pins is the WIRE shape of a tag filter.

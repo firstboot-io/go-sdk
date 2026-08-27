@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // The API's refusals, as Go errors.

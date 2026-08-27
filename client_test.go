@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // These drive the transports against a fake API rather than a real one. What

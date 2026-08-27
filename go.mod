@@ -1,4 +1,4 @@
-module github.com/firstboot-io/firstboot-go
+module github.com/firstboot-io/go-sdk
 
 go 1.25.7
 

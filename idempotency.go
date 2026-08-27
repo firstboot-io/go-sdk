@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // The header that makes a retry safe, set for the caller.

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // Waiting for a resource to converge.

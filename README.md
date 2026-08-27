@@ -3,7 +3,7 @@
 The Go client for the Firstboot API.
 
 ```
-go get github.com/firstboot-io/firstboot-go
+go get github.com/firstboot-io/go-sdk
 ```
 
 ```go

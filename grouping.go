@@ -4,7 +4,7 @@ import (
 	"context"
 	"iter"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // Grouping: the project a resource is IN and the tags it WEARS.

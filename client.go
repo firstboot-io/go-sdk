@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/firstboot-io/firstboot-go/fbapi"
+	"github.com/firstboot-io/go-sdk/fbapi"
 )
 
 // Environment variables the client reads when an option is not given. They are
