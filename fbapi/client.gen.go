@@ -2681,6 +2681,15 @@ type BuildListOutputBody struct {
 	Builds *[]BuildBody `json:"builds"`
 }
 
+// ClientBody defines model for ClientBody.
+type ClientBody struct {
+	Id       string  `json:"id"`
+	LogoUri  *string `json:"logo_uri,omitempty"`
+	Name     string  `json:"name"`
+	Uri      *string `json:"uri,omitempty"`
+	Verified bool    `json:"verified"`
+}
+
 // CodeInputBody defines model for CodeInputBody.
 type CodeInputBody struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -2688,6 +2697,20 @@ type CodeInputBody struct {
 	// Examples: https://example.com/schemas/CodeInputBody.json
 	Schema *string `json:"$schema,omitempty"`
 	Code   string  `json:"code"`
+}
+
+// ConsentBody defines model for ConsentBody.
+type ConsentBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/ConsentBody.json
+	Schema        *string             `json:"$schema,omitempty"`
+	Client        ClientBody          `json:"client"`
+	ExpiresAt     time.Time           `json:"expires_at"`
+	Organizations *[]OrganizationBody `json:"organizations"`
+	RequestId     string              `json:"request_id"`
+	Resource      *string             `json:"resource,omitempty"`
+	Scopes        *[]string           `json:"scopes"`
 }
 
 // ConsoleOutputBody defines model for ConsoleOutputBody.
@@ -3170,6 +3193,26 @@ type DbMetricsOutputBody struct {
 	// Examples: https://example.com/schemas/DbMetricsOutputBody.json
 	Schema *string              `json:"$schema,omitempty"`
 	Points *[]DbMetricPointBody `json:"points"`
+}
+
+// DecisionInputBody defines model for DecisionInputBody.
+type DecisionInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/DecisionInputBody.json
+	Schema         *string   `json:"$schema,omitempty"`
+	Approve        bool      `json:"approve"`
+	OrganizationId *string   `json:"organization_id,omitempty"`
+	Scopes         *[]string `json:"scopes,omitempty"`
+}
+
+// DecisionOutputBody defines model for DecisionOutputBody.
+type DecisionOutputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/DecisionOutputBody.json
+	Schema     *string `json:"$schema,omitempty"`
+	RedirectTo string  `json:"redirect_to"`
 }
 
 // DeletionBlockersBody defines model for DeletionBlockersBody.
@@ -4048,6 +4091,26 @@ type GitRepositoryBody struct {
 	Private       bool   `json:"private"`
 }
 
+// GrantBody defines model for GrantBody.
+type GrantBody struct {
+	Client           ClientBody `json:"client"`
+	CreatedAt        time.Time  `json:"created_at"`
+	Id               string     `json:"id"`
+	LastUsedAt       *time.Time `json:"last_used_at,omitempty"`
+	OrganizationId   string     `json:"organization_id"`
+	OrganizationName string     `json:"organization_name"`
+	Scopes           *[]string  `json:"scopes"`
+}
+
+// GrantsOutputBody defines model for GrantsOutputBody.
+type GrantsOutputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/GrantsOutputBody.json
+	Schema *string      `json:"$schema,omitempty"`
+	Grants *[]GrantBody `json:"grants"`
+}
+
 // IdentitiesOutputBody defines model for IdentitiesOutputBody.
 type IdentitiesOutputBody struct {
 	// Schema A URL to the JSON Schema for this object.
@@ -4761,6 +4824,13 @@ type NotificationsReadOutputBody struct {
 	// Examples: https://example.com/schemas/NotificationsReadOutputBody.json
 	Schema      *string `json:"$schema,omitempty"`
 	UnreadCount int64   `json:"unread_count"`
+}
+
+// OrganizationBody defines model for OrganizationBody.
+type OrganizationBody struct {
+	Id       string `json:"id"`
+	IsActive bool   `json:"is_active"`
+	Name     string `json:"name"`
 }
 
 // OrganizationCreateInputBody defines model for OrganizationCreateInputBody.
@@ -6951,6 +7021,9 @@ type NetworkTagsSetJSONRequestBody = TagsBody
 // NotificationsMarkReadJSONRequestBody defines body for NotificationsMarkRead for application/json ContentType.
 type NotificationsMarkReadJSONRequestBody = NotificationsReadInputBody
 
+// OauthConsentDecideJSONRequestBody defines body for OauthConsentDecide for application/json ContentType.
+type OauthConsentDecideJSONRequestBody = DecisionInputBody
+
 // OrganizationsCreateJSONRequestBody defines body for OrganizationsCreate for application/json ContentType.
 type OrganizationsCreateJSONRequestBody = OrganizationCreateInputBody
 
@@ -7191,6 +7264,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /v1/account/billing-profile (the `AccountBillingProfileSave` operationId).
 	AccountBillingProfileSave(ctx context.Context, body AccountBillingProfileSaveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConnectedAppsList Applications connected to my account
+	//
+	// Every application that holds a live authorization, what it may do, and when it last used it.
+	//
+	// Corresponds with GET /v1/account/connected-apps (the `ConnectedAppsList` operationId).
+	ConnectedAppsList(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConnectedAppRevoke Disconnect an application
+	//
+	// The consent is withdrawn and the token it holds stops working immediately, not at its own expiry.
+	//
+	// Corresponds with DELETE /v1/account/connected-apps/{id} (the `ConnectedAppRevoke` operationId).
+	ConnectedAppRevoke(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AccountDeletionCancel Cancel a scheduled deletion
 	//
@@ -9098,6 +9185,31 @@ type ClientInterface interface {
 	// Corresponds with DELETE /v1/notifications/{id} (the `NotificationDelete` operationId).
 	NotificationDelete(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OauthConsentGet An application is asking for access
+	//
+	// What the consent screen renders. The prompt belongs to one account; another account's id is a 404.
+	//
+	// Corresponds with GET /v1/oauth/authorization-requests/{id} (the `OauthConsentGet` operationId).
+	OauthConsentGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OauthConsentDecideWithBody Answer an application's request
+	//
+	// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+	OauthConsentDecideWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OauthConsentDecide Answer an application's request
+	//
+	// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+	OauthConsentDecide(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// OrganizationInvitationGet View invitation
 	//
 	// Corresponds with GET /v1/organization-invitations/{token} (the `OrganizationInvitationGet` operationId).
@@ -10097,6 +10209,40 @@ func (c *Client) AccountBillingProfileSaveWithBody(ctx context.Context, contentT
 // Corresponds with PUT /v1/account/billing-profile (the `AccountBillingProfileSave` operationId).
 func (c *Client) AccountBillingProfileSave(ctx context.Context, body AccountBillingProfileSaveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAccountBillingProfileSaveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ConnectedAppsList Applications connected to my account
+//
+// Every application that holds a live authorization, what it may do, and when it last used it.
+//
+// Corresponds with GET /v1/account/connected-apps (the `ConnectedAppsList` operationId).
+func (c *Client) ConnectedAppsList(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConnectedAppsListRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ConnectedAppRevoke Disconnect an application
+//
+// The consent is withdrawn and the token it holds stops working immediately, not at its own expiry.
+//
+// Corresponds with DELETE /v1/account/connected-apps/{id} (the `ConnectedAppRevoke` operationId).
+func (c *Client) ConnectedAppRevoke(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConnectedAppRevokeRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -14513,6 +14659,61 @@ func (c *Client) NotificationDelete(ctx context.Context, id int64, reqEditors ..
 	return c.Client.Do(req)
 }
 
+// OauthConsentGet An application is asking for access
+//
+// What the consent screen renders. The prompt belongs to one account; another account's id is a 404.
+//
+// Corresponds with GET /v1/oauth/authorization-requests/{id} (the `OauthConsentGet` operationId).
+func (c *Client) OauthConsentGet(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOauthConsentGetRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OauthConsentDecideWithBody Answer an application's request
+//
+// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+func (c *Client) OauthConsentDecideWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOauthConsentDecideRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OauthConsentDecide Answer an application's request
+//
+// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+func (c *Client) OauthConsentDecide(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOauthConsentDecideRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // OrganizationInvitationGet View invitation
 //
 // Corresponds with GET /v1/organization-invitations/{token} (the `OrganizationInvitationGet` operationId).
@@ -16792,6 +16993,67 @@ func NewAccountBillingProfileSaveRequestWithBody(server string, contentType stri
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewConnectedAppsListRequest constructs an http.Request for the ConnectedAppsList method
+func NewConnectedAppsListRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/connected-apps")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewConnectedAppRevokeRequest constructs an http.Request for the ConnectedAppRevoke method
+func NewConnectedAppRevokeRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/connected-apps/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -24423,6 +24685,87 @@ func NewNotificationDeleteRequest(server string, id int64) (*http.Request, error
 	return req, nil
 }
 
+// NewOauthConsentGetRequest constructs an http.Request for the OauthConsentGet method
+func NewOauthConsentGetRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/oauth/authorization-requests/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOauthConsentDecideRequest calls the generic OauthConsentDecide builder with application/json body
+func NewOauthConsentDecideRequest(server string, id string, body OauthConsentDecideJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewOauthConsentDecideRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewOauthConsentDecideRequestWithBody constructs an http.Request for the OauthConsentDecide method, with any body, and a specified content type
+func NewOauthConsentDecideRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/oauth/authorization-requests/%s/decision", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewOrganizationInvitationGetRequest constructs an http.Request for the OrganizationInvitationGet method
 func NewOrganizationInvitationGetRequest(server string, token string) (*http.Request, error) {
 	var err error
@@ -28561,6 +28904,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /v1/account/billing-profile (the `AccountBillingProfileSave` operationId).
 	AccountBillingProfileSaveWithResponse(ctx context.Context, body AccountBillingProfileSaveJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountBillingProfileSaveResponse, error)
 
+	// ConnectedAppsListWithResponse Applications connected to my account
+	//
+	// Every application that holds a live authorization, what it may do, and when it last used it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/account/connected-apps (the `ConnectedAppsList` operationId).
+	ConnectedAppsListWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ConnectedAppsListResponse, error)
+
+	// ConnectedAppRevokeWithResponse Disconnect an application
+	//
+	// The consent is withdrawn and the token it holds stops working immediately, not at its own expiry.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /v1/account/connected-apps/{id} (the `ConnectedAppRevoke` operationId).
+	ConnectedAppRevokeWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*ConnectedAppRevokeResponse, error)
+
 	// AccountDeletionCancelWithResponse Cancel a scheduled deletion
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -30659,6 +31020,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with DELETE /v1/notifications/{id} (the `NotificationDelete` operationId).
 	NotificationDeleteWithResponse(ctx context.Context, id int64, reqEditors ...RequestEditorFn) (*NotificationDeleteResponse, error)
 
+	// OauthConsentGetWithResponse An application is asking for access
+	//
+	// What the consent screen renders. The prompt belongs to one account; another account's id is a 404.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/oauth/authorization-requests/{id} (the `OauthConsentGet` operationId).
+	OauthConsentGetWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*OauthConsentGetResponse, error)
+
+	// OauthConsentDecideWithBodyWithResponse Answer an application's request
+	//
+	// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+	OauthConsentDecideWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OauthConsentDecideResponse, error)
+
+	// OauthConsentDecideWithResponse Answer an application's request
+	//
+	// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+	OauthConsentDecideWithResponse(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*OauthConsentDecideResponse, error)
+
 	// OrganizationInvitationGetWithResponse View invitation
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -31939,6 +32327,95 @@ func (r AccountBillingProfileSaveResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AccountBillingProfileSaveResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ConnectedAppsListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *GrantsOutputBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ConnectedAppsListResponse) GetJSON200() *GrantsOutputBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r ConnectedAppsListResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ConnectedAppsListResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ConnectedAppsListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConnectedAppsListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ConnectedAppsListResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ConnectedAppRevokeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r ConnectedAppRevokeResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ConnectedAppRevokeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ConnectedAppRevokeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConnectedAppRevokeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ConnectedAppRevokeResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -39911,6 +40388,102 @@ func (r NotificationDeleteResponse) ContentType() string {
 	return ""
 }
 
+type OauthConsentGetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ConsentBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r OauthConsentGetResponse) GetJSON200() *ConsentBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r OauthConsentGetResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OauthConsentGetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OauthConsentGetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OauthConsentGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OauthConsentGetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type OauthConsentDecideResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DecisionOutputBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r OauthConsentDecideResponse) GetJSON200() *DecisionOutputBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r OauthConsentDecideResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OauthConsentDecideResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OauthConsentDecideResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OauthConsentDecideResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OauthConsentDecideResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type OrganizationInvitationGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -44386,6 +44959,36 @@ func (c *ClientWithResponses) AccountBillingProfileSaveWithResponse(ctx context.
 	return ParseAccountBillingProfileSaveResponse(rsp)
 }
 
+// ConnectedAppsListWithResponse Applications connected to my account
+//
+// Every application that holds a live authorization, what it may do, and when it last used it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/account/connected-apps (the `ConnectedAppsList` operationId).
+func (c *ClientWithResponses) ConnectedAppsListWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ConnectedAppsListResponse, error) {
+	rsp, err := c.ConnectedAppsList(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConnectedAppsListResponse(rsp)
+}
+
+// ConnectedAppRevokeWithResponse Disconnect an application
+//
+// The consent is withdrawn and the token it holds stops working immediately, not at its own expiry.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /v1/account/connected-apps/{id} (the `ConnectedAppRevoke` operationId).
+func (c *ClientWithResponses) ConnectedAppRevokeWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*ConnectedAppRevokeResponse, error) {
+	rsp, err := c.ConnectedAppRevoke(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConnectedAppRevokeResponse(rsp)
+}
+
 // AccountDeletionCancelWithResponse Cancel a scheduled deletion
 //
 // Returns a wrapper object for the known response body format(s).
@@ -47984,6 +48587,51 @@ func (c *ClientWithResponses) NotificationDeleteWithResponse(ctx context.Context
 	return ParseNotificationDeleteResponse(rsp)
 }
 
+// OauthConsentGetWithResponse An application is asking for access
+//
+// What the consent screen renders. The prompt belongs to one account; another account's id is a 404.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/oauth/authorization-requests/{id} (the `OauthConsentGet` operationId).
+func (c *ClientWithResponses) OauthConsentGetWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*OauthConsentGetResponse, error) {
+	rsp, err := c.OauthConsentGet(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOauthConsentGetResponse(rsp)
+}
+
+// OauthConsentDecideWithBodyWithResponse Answer an application's request
+//
+// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+func (c *ClientWithResponses) OauthConsentDecideWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OauthConsentDecideResponse, error) {
+	rsp, err := c.OauthConsentDecideWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOauthConsentDecideResponse(rsp)
+}
+
+// OauthConsentDecideWithResponse Answer an application's request
+//
+// Approve with the scopes ticked and the organization chosen, or refuse. Either way the client is told.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
+func (c *ClientWithResponses) OauthConsentDecideWithResponse(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*OauthConsentDecideResponse, error) {
+	rsp, err := c.OauthConsentDecide(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOauthConsentDecideResponse(rsp)
+}
+
 // OrganizationInvitationGetWithResponse View invitation
 //
 // Returns a wrapper object for the known response body format(s).
@@ -49886,6 +50534,68 @@ func ParseAccountBillingProfileSaveResponse(rsp *http.Response) (*AccountBilling
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseConnectedAppsListResponse parses an HTTP response from a ConnectedAppsListWithResponse call
+func ParseConnectedAppsListResponse(rsp *http.Response) (*ConnectedAppsListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConnectedAppsListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GrantsOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseConnectedAppRevokeResponse parses an HTTP response from a ConnectedAppRevokeWithResponse call
+func ParseConnectedAppRevokeResponse(rsp *http.Response) (*ConnectedAppRevokeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConnectedAppRevokeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
@@ -55515,6 +56225,72 @@ func ParseNotificationDeleteResponse(rsp *http.Response) (*NotificationDeleteRes
 	switch {
 	case rsp.StatusCode == 204:
 		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOauthConsentGetResponse parses an HTTP response from a OauthConsentGetWithResponse call
+func ParseOauthConsentGetResponse(rsp *http.Response) (*OauthConsentGetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OauthConsentGetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ConsentBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOauthConsentDecideResponse parses an HTTP response from a OauthConsentDecideWithResponse call
+func ParseOauthConsentDecideResponse(rsp *http.Response) (*OauthConsentDecideResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OauthConsentDecideResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DecisionOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
