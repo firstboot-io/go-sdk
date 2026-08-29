@@ -4839,7 +4839,10 @@ type OrganizationCreateInputBody struct {
 	//
 	// Examples: https://example.com/schemas/OrganizationCreateInputBody.json
 	Schema *string `json:"$schema,omitempty"`
-	Name   string  `json:"name"`
+
+	// Country ISO-3166 alpha-2 the organization is INVOICED in. It decides the billing currency (TR pays in TRY, everywhere else in USD) and CANNOT be changed afterwards — moving country means creating a new organization. Defaults to TR.
+	Country *string `json:"country,omitempty"`
+	Name    string  `json:"name"`
 }
 
 // OrganizationDetail defines model for OrganizationDetail.
@@ -4847,8 +4850,14 @@ type OrganizationDetail struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/OrganizationDetail.json
-	Schema      *string    `json:"$schema,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
+	Schema *string `json:"$schema,omitempty"`
+
+	// Country ISO-3166 alpha-2 this organization is invoiced in. Immutable.
+	Country   string    `json:"country"`
+	CreatedAt time.Time `json:"created_at"`
+
+	// Currency ISO-4217 every price, invoice and wallet movement for this organization is denominated in. Derived from country, immutable.
+	Currency    string     `json:"currency"`
 	Id          string     `json:"id"`
 	IsActive    bool       `json:"is_active"`
 	IsPersonal  bool       `json:"is_personal"`
@@ -4894,8 +4903,14 @@ type OrganizationItem struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/OrganizationItem.json
-	Schema      *string    `json:"$schema,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
+	Schema *string `json:"$schema,omitempty"`
+
+	// Country ISO-3166 alpha-2 this organization is invoiced in. Immutable.
+	Country   string    `json:"country"`
+	CreatedAt time.Time `json:"created_at"`
+
+	// Currency ISO-4217 every price, invoice and wallet movement for this organization is denominated in. Derived from country, immutable.
+	Currency    string     `json:"currency"`
 	Id          string     `json:"id"`
 	IsActive    bool       `json:"is_active"`
 	IsPersonal  bool       `json:"is_personal"`
@@ -5373,8 +5388,11 @@ type RegisterInputBody struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/RegisterInputBody.json
-	Schema *string             `json:"$schema,omitempty"`
-	Email  openapi_types.Email `json:"email"`
+	Schema *string `json:"$schema,omitempty"`
+
+	// Country ISO-3166 alpha-2. It seeds the personal organization's INVOICE country, which decides the billing currency (TR pays in TRY, everywhere else in USD) and cannot be changed afterwards. Omitted, it is derived from the timezone, and TR when that yields nothing
+	Country *string             `json:"country,omitempty"`
+	Email   openapi_types.Email `json:"email"`
 
 	// FirstName Given name. Separate from the family name because a registry and a Turkish invoice both take them as separate values
 	FirstName string `json:"first_name"`
@@ -5387,7 +5405,7 @@ type RegisterInputBody struct {
 	Locale   *RegisterInputBodyLocale `json:"locale,omitempty"`
 	Password string                   `json:"password"`
 
-	// Timezone IANA zone as the browser resolved it (Intl.DateTimeFormat().resolvedOptions().timeZone). The country is derived from it
+	// Timezone IANA zone as the browser resolved it (Intl.DateTimeFormat().resolvedOptions().timeZone). The country is derived from it when none is given
 	Timezone *string `json:"timezone,omitempty"`
 
 	// TurnstileToken Cloudflare Turnstile response (required if the server has it configured)
