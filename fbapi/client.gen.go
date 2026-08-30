@@ -4229,7 +4229,7 @@ type IntentBody struct {
 	NetMinor *int64     `json:"net_minor,omitempty"`
 	PaidAt   *time.Time `json:"paid_at,omitempty"`
 
-	// Provider Integration: paytr | bank_transfer
+	// Provider Integration that collected it: paytr (TRY) | stripe (USD) | bank_transfer (TRY)
 	Provider string `json:"provider"`
 	State    string `json:"state"`
 
