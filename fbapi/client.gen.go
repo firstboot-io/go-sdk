@@ -6112,9 +6112,14 @@ type TopupOutputBody struct {
 	BankTransferCode *string `json:"bank_transfer_code,omitempty"`
 
 	// IframeToken card: PayTR iframe token
-	IframeToken *string    `json:"iframe_token,omitempty"`
-	IframeUrl   *string    `json:"iframe_url,omitempty"`
-	Intent      IntentBody `json:"intent"`
+	IframeToken *string `json:"iframe_token,omitempty"`
+
+	// IframeUrl card: a payment page that MAY be embedded in an iframe
+	IframeUrl *string    `json:"iframe_url,omitempty"`
+	Intent    IntentBody `json:"intent"`
+
+	// RedirectUrl card: a payment page the TOP WINDOW must navigate to — it cannot be embedded
+	RedirectUrl *string `json:"redirect_url,omitempty"`
 }
 
 // TotpSetupInputBody defines model for TotpSetupInputBody.
