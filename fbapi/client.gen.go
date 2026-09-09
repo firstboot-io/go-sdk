@@ -4721,6 +4721,9 @@ type NetworkBody struct {
 	Name        string    `json:"name"`
 	ProjectId   *string   `json:"project_id,omitempty"`
 
+	// RegionId Region of the private network. Absent only for historical unscoped networks.
+	RegionId *string `json:"region_id,omitempty"`
+
 	// State SETTLED on active or error; creating and deleting are in flight.
 	State NetworkBodyState `json:"state"`
 
@@ -4744,6 +4747,9 @@ type NetworkCreateInputBody struct {
 
 	// ProjectId Optional project for grouping
 	ProjectId *string `json:"project_id,omitempty"`
+
+	// Region Region slug. May be omitted only when exactly one active datacenter is available.
+	Region *string `json:"region,omitempty"`
 
 	// Tags Tags to give the resource at birth. Lowercased, deduplicated and sorted before storage.
 	Tags *[]string `json:"tags,omitempty"`
@@ -5364,8 +5370,14 @@ type RegionBody struct {
 
 	// CountryCode ISO 3166-1 alpha-2, lowercase (e.g. tr). Empty when staff has not set one; render the region without a country rather than guessing.
 	CountryCode string `json:"country_code"`
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
+
+	// Id Stable region identity, also returned by region-scoped resources.
+	Id   string `json:"id"`
+	Name string `json:"name"`
+
+	// NetworkAvailable An enabled datacenter is configured for new private networks in this region.
+	NetworkAvailable bool   `json:"network_available"`
+	Slug             string `json:"slug"`
 }
 
 // RegionRef defines model for RegionRef.
