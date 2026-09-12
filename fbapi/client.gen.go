@@ -1680,6 +1680,27 @@ func (e ServerAlertDeleteParamsMetric) Valid() bool {
 	}
 }
 
+// Defines values for ServerDiskMetricsListParamsWindow.
+const (
+	ServerDiskMetricsListParamsWindowDay  ServerDiskMetricsListParamsWindow = "day"
+	ServerDiskMetricsListParamsWindowHour ServerDiskMetricsListParamsWindow = "hour"
+	ServerDiskMetricsListParamsWindowWeek ServerDiskMetricsListParamsWindow = "week"
+)
+
+// Valid indicates whether the value is a known member of the ServerDiskMetricsListParamsWindow enum.
+func (e ServerDiskMetricsListParamsWindow) Valid() bool {
+	switch e {
+	case ServerDiskMetricsListParamsWindowDay:
+		return true
+	case ServerDiskMetricsListParamsWindowHour:
+		return true
+	case ServerDiskMetricsListParamsWindowWeek:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ServerMetricsListParamsWindow.
 const (
 	ServerMetricsListParamsWindowDay  ServerMetricsListParamsWindow = "day"
@@ -3268,6 +3289,34 @@ type DeletionStateOutputBody struct {
 
 	// ScheduledFor When erasure happens if the request is not cancelled
 	ScheduledFor *time.Time `json:"scheduled_for,omitempty"`
+}
+
+// DiskMetricPointBody defines model for DiskMetricPointBody.
+type DiskMetricPointBody struct {
+	At time.Time `json:"at"`
+
+	// BusyPct Highest busy percentage among whole guest disks
+	BusyPct *float64 `json:"busy_pct"`
+
+	// IoWaitPct Guest CPU time waiting for I/O, percent
+	IoWaitPct *float64 `json:"io_wait_pct"`
+
+	// ReadIops Completed disk reads per second; null when unavailable
+	ReadIops *float64 `json:"read_iops"`
+
+	// ReadLatencyMs Mean milliseconds per completed read; null when idle or unavailable
+	ReadLatencyMs  *float64 `json:"read_latency_ms"`
+	WriteIops      *float64 `json:"write_iops"`
+	WriteLatencyMs *float64 `json:"write_latency_ms"`
+}
+
+// DiskMetricsOutputBody defines model for DiskMetricsOutputBody.
+type DiskMetricsOutputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/DiskMetricsOutputBody.json
+	Schema *string                `json:"$schema,omitempty"`
+	Points *[]DiskMetricPointBody `json:"points"`
 }
 
 // DnsRecordBody defines model for DnsRecordBody.
@@ -6735,6 +6784,15 @@ type ServerLedgerListParams struct {
 	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// ServerDiskMetricsListParams defines parameters for ServerDiskMetricsList.
+type ServerDiskMetricsListParams struct {
+	// Window Metric window. hour/day serve raw 1-minute samples; week serves the 7-day hourly rollup (one averaged point per hour)
+	Window *ServerDiskMetricsListParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// ServerDiskMetricsListParamsWindow defines parameters for ServerDiskMetricsList.
+type ServerDiskMetricsListParamsWindow string
+
 // ServerEventsListParams defines parameters for ServerEventsList.
 type ServerEventsListParams struct {
 	AfterId *int64 `form:"after_id,omitempty" json:"after_id,omitempty"`
@@ -9644,6 +9702,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /v1/servers/{id}/console (the `ServerConsoleCreate` operationId).
 	ServerConsoleCreate(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ServerDiskMetricsList Sampled disk performance
+	//
+	// Corresponds with GET /v1/servers/{id}/disk-metrics (the `ServerDiskMetricsList` operationId).
+	ServerDiskMetricsList(ctx context.Context, id string, params *ServerDiskMetricsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ServerEventsList Server event stream
 	//
@@ -15759,6 +15822,21 @@ func (c *Client) ServerLedgerList(ctx context.Context, id string, params *Server
 // Corresponds with POST /v1/servers/{id}/console (the `ServerConsoleCreate` operationId).
 func (c *Client) ServerConsoleCreate(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewServerConsoleCreateRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ServerDiskMetricsList Sampled disk performance
+//
+// Corresponds with GET /v1/servers/{id}/disk-metrics (the `ServerDiskMetricsList` operationId).
+func (c *Client) ServerDiskMetricsList(ctx context.Context, id string, params *ServerDiskMetricsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewServerDiskMetricsListRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -26805,6 +26883,67 @@ func NewServerConsoleCreateRequest(server string, id string) (*http.Request, err
 	return req, nil
 }
 
+// NewServerDiskMetricsListRequest constructs an http.Request for the ServerDiskMetricsList method
+func NewServerDiskMetricsListRequest(server string, id string, params *ServerDiskMetricsListParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/servers/%s/disk-metrics", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewServerEventsListRequest constructs an http.Request for the ServerEventsList method
 func NewServerEventsListRequest(server string, id string, params *ServerEventsListParams) (*http.Request, error) {
 	var err error
@@ -31549,6 +31688,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /v1/servers/{id}/console (the `ServerConsoleCreate` operationId).
 	ServerConsoleCreateWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*ServerConsoleCreateResponse, error)
+
+	// ServerDiskMetricsListWithResponse Sampled disk performance
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /v1/servers/{id}/disk-metrics (the `ServerDiskMetricsList` operationId).
+	ServerDiskMetricsListWithResponse(ctx context.Context, id string, params *ServerDiskMetricsListParams, reqEditors ...RequestEditorFn) (*ServerDiskMetricsListResponse, error)
 
 	// ServerEventsListWithResponse Server event stream
 	//
@@ -42732,6 +42878,54 @@ func (r ServerConsoleCreateResponse) ContentType() string {
 	return ""
 }
 
+type ServerDiskMetricsListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DiskMetricsOutputBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ServerDiskMetricsListResponse) GetJSON200() *DiskMetricsOutputBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r ServerDiskMetricsListResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ServerDiskMetricsListResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ServerDiskMetricsListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ServerDiskMetricsListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ServerDiskMetricsListResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ServerEventsListResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -49505,6 +49699,19 @@ func (c *ClientWithResponses) ServerConsoleCreateWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseServerConsoleCreateResponse(rsp)
+}
+
+// ServerDiskMetricsListWithResponse Sampled disk performance
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /v1/servers/{id}/disk-metrics (the `ServerDiskMetricsList` operationId).
+func (c *ClientWithResponses) ServerDiskMetricsListWithResponse(ctx context.Context, id string, params *ServerDiskMetricsListParams, reqEditors ...RequestEditorFn) (*ServerDiskMetricsListResponse, error) {
+	rsp, err := c.ServerDiskMetricsList(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseServerDiskMetricsListResponse(rsp)
 }
 
 // ServerEventsListWithResponse Server event stream
@@ -57858,6 +58065,39 @@ func ParseServerConsoleCreateResponse(rsp *http.Response) (*ServerConsoleCreateR
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseServerDiskMetricsListResponse parses an HTTP response from a ServerDiskMetricsListWithResponse call
+func ParseServerDiskMetricsListResponse(rsp *http.Response) (*ServerDiskMetricsListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ServerDiskMetricsListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DiskMetricsOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
