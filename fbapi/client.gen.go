@@ -966,6 +966,108 @@ func (e NotificationBodySeverity) Valid() bool {
 	}
 }
 
+// Defines values for OrganizationCreateInputBodyIndustry.
+const (
+	OrganizationCreateInputBodyIndustryAgency       OrganizationCreateInputBodyIndustry = "agency"
+	OrganizationCreateInputBodyIndustryEcommerce    OrganizationCreateInputBodyIndustry = "ecommerce"
+	OrganizationCreateInputBodyIndustryEducation    OrganizationCreateInputBodyIndustry = "education"
+	OrganizationCreateInputBodyIndustryFinance      OrganizationCreateInputBodyIndustry = "finance"
+	OrganizationCreateInputBodyIndustryGaming       OrganizationCreateInputBodyIndustry = "gaming"
+	OrganizationCreateInputBodyIndustryHealthcare   OrganizationCreateInputBodyIndustry = "healthcare"
+	OrganizationCreateInputBodyIndustryMedia        OrganizationCreateInputBodyIndustry = "media"
+	OrganizationCreateInputBodyIndustryOther        OrganizationCreateInputBodyIndustry = "other"
+	OrganizationCreateInputBodyIndustryPublicSector OrganizationCreateInputBodyIndustry = "public_sector"
+	OrganizationCreateInputBodyIndustrySoftware     OrganizationCreateInputBodyIndustry = "software"
+)
+
+// Valid indicates whether the value is a known member of the OrganizationCreateInputBodyIndustry enum.
+func (e OrganizationCreateInputBodyIndustry) Valid() bool {
+	switch e {
+	case OrganizationCreateInputBodyIndustryAgency:
+		return true
+	case OrganizationCreateInputBodyIndustryEcommerce:
+		return true
+	case OrganizationCreateInputBodyIndustryEducation:
+		return true
+	case OrganizationCreateInputBodyIndustryFinance:
+		return true
+	case OrganizationCreateInputBodyIndustryGaming:
+		return true
+	case OrganizationCreateInputBodyIndustryHealthcare:
+		return true
+	case OrganizationCreateInputBodyIndustryMedia:
+		return true
+	case OrganizationCreateInputBodyIndustryOther:
+		return true
+	case OrganizationCreateInputBodyIndustryPublicSector:
+		return true
+	case OrganizationCreateInputBodyIndustrySoftware:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrganizationInputBodyAccountType.
+const (
+	OrganizationInputBodyAccountTypeCompany    OrganizationInputBodyAccountType = "company"
+	OrganizationInputBodyAccountTypeIndividual OrganizationInputBodyAccountType = "individual"
+)
+
+// Valid indicates whether the value is a known member of the OrganizationInputBodyAccountType enum.
+func (e OrganizationInputBodyAccountType) Valid() bool {
+	switch e {
+	case OrganizationInputBodyAccountTypeCompany:
+		return true
+	case OrganizationInputBodyAccountTypeIndividual:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrganizationInputBodyIndustry.
+const (
+	OrganizationInputBodyIndustryAgency       OrganizationInputBodyIndustry = "agency"
+	OrganizationInputBodyIndustryEcommerce    OrganizationInputBodyIndustry = "ecommerce"
+	OrganizationInputBodyIndustryEducation    OrganizationInputBodyIndustry = "education"
+	OrganizationInputBodyIndustryFinance      OrganizationInputBodyIndustry = "finance"
+	OrganizationInputBodyIndustryGaming       OrganizationInputBodyIndustry = "gaming"
+	OrganizationInputBodyIndustryHealthcare   OrganizationInputBodyIndustry = "healthcare"
+	OrganizationInputBodyIndustryMedia        OrganizationInputBodyIndustry = "media"
+	OrganizationInputBodyIndustryOther        OrganizationInputBodyIndustry = "other"
+	OrganizationInputBodyIndustryPublicSector OrganizationInputBodyIndustry = "public_sector"
+	OrganizationInputBodyIndustrySoftware     OrganizationInputBodyIndustry = "software"
+)
+
+// Valid indicates whether the value is a known member of the OrganizationInputBodyIndustry enum.
+func (e OrganizationInputBodyIndustry) Valid() bool {
+	switch e {
+	case OrganizationInputBodyIndustryAgency:
+		return true
+	case OrganizationInputBodyIndustryEcommerce:
+		return true
+	case OrganizationInputBodyIndustryEducation:
+		return true
+	case OrganizationInputBodyIndustryFinance:
+		return true
+	case OrganizationInputBodyIndustryGaming:
+		return true
+	case OrganizationInputBodyIndustryHealthcare:
+		return true
+	case OrganizationInputBodyIndustryMedia:
+		return true
+	case OrganizationInputBodyIndustryOther:
+		return true
+	case OrganizationInputBodyIndustryPublicSector:
+		return true
+	case OrganizationInputBodyIndustrySoftware:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for OrganizationInviteInputBodyRole.
 const (
 	OrganizationInviteInputBodyRoleAdmin  OrganizationInviteInputBodyRole = "admin"
@@ -978,6 +1080,24 @@ func (e OrganizationInviteInputBodyRole) Valid() bool {
 	case OrganizationInviteInputBodyRoleAdmin:
 		return true
 	case OrganizationInviteInputBodyRoleMember:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OrganizationItemAccountType.
+const (
+	OrganizationItemAccountTypeCompany    OrganizationItemAccountType = "company"
+	OrganizationItemAccountTypeIndividual OrganizationItemAccountType = "individual"
+)
+
+// Valid indicates whether the value is a known member of the OrganizationItemAccountType enum.
+func (e OrganizationItemAccountType) Valid() bool {
+	switch e {
+	case OrganizationItemAccountTypeCompany:
+		return true
+	case OrganizationItemAccountTypeIndividual:
 		return true
 	default:
 		return false
@@ -1007,16 +1127,16 @@ func (e OrganizationRoleInputBodyRole) Valid() bool {
 
 // Defines values for ProfileBodyKind.
 const (
-	Company    ProfileBodyKind = "company"
-	Individual ProfileBodyKind = "individual"
+	ProfileBodyKindCompany    ProfileBodyKind = "company"
+	ProfileBodyKindIndividual ProfileBodyKind = "individual"
 )
 
 // Valid indicates whether the value is a known member of the ProfileBodyKind enum.
 func (e ProfileBodyKind) Valid() bool {
 	switch e {
-	case Company:
+	case ProfileBodyKindCompany:
 		return true
-	case Individual:
+	case ProfileBodyKindIndividual:
 		return true
 	default:
 		return false
@@ -4881,17 +5001,6 @@ type NotificationsReadOutputBody struct {
 	UnreadCount int64   `json:"unread_count"`
 }
 
-// OnboardingInputBody defines model for OnboardingInputBody.
-type OnboardingInputBody struct {
-	// Schema A URL to the JSON Schema for this object.
-	//
-	// Examples: https://example.com/schemas/OnboardingInputBody.json
-	Schema *string `json:"$schema,omitempty"`
-
-	// Timezone IANA zone the customer confirmed. Sent without a country, so the person's country moves with it, as on PATCH /v1/account
-	Timezone *string `json:"timezone,omitempty"`
-}
-
 // OrganizationBody defines model for OrganizationBody.
 type OrganizationBody struct {
 	Id       string `json:"id"`
@@ -4906,10 +5015,16 @@ type OrganizationCreateInputBody struct {
 	// Examples: https://example.com/schemas/OrganizationCreateInputBody.json
 	Schema *string `json:"$schema,omitempty"`
 
-	// Country ISO-3166 alpha-2 the organization is INVOICED in. It decides the billing currency (TR pays in TRY, everywhere else in USD) and CANNOT be changed afterwards — moving country means creating a new organization. Defaults to TR.
+	// Country ISO-3166 alpha-2 the organization is INVOICED in. It decides the billing currency (TR pays in TRY, everywhere else in USD) and CANNOT be changed afterwards; moving country means creating a new organization. Defaults to TR.
 	Country *string `json:"country,omitempty"`
-	Name    string  `json:"name"`
+
+	// Industry What the company does. An organization opened here is always a company account (00078); the individual account is the personal one created at onboarding
+	Industry OrganizationCreateInputBodyIndustry `json:"industry"`
+	Name     string                              `json:"name"`
 }
+
+// OrganizationCreateInputBodyIndustry What the company does. An organization opened here is always a company account (00078); the individual account is the personal one created at onboarding
+type OrganizationCreateInputBodyIndustry string
 
 // OrganizationDetail defines model for OrganizationDetail.
 type OrganizationDetail struct {
@@ -4931,6 +5046,33 @@ type OrganizationDetail struct {
 	Role        string     `json:"role"`
 	SuspendedAt *time.Time `json:"suspended_at,omitempty"`
 }
+
+// OrganizationInputBody defines model for OrganizationInputBody.
+type OrganizationInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/OrganizationInputBody.json
+	Schema *string `json:"$schema,omitempty"`
+
+	// AccountType individual opens the person's personal organization; company opens an organization that can invite members. Cannot be changed
+	AccountType OrganizationInputBodyAccountType `json:"account_type"`
+
+	// Country ISO-3166 alpha-2 billing country. It decides the currency (TR pays in TRY, everywhere else in USD) and cannot be changed; billing in another country means another organization
+	Country string `json:"country"`
+
+	// Industry Required for a company, refused for an individual
+	Industry *OrganizationInputBodyIndustry `json:"industry,omitempty"`
+	Name     string                         `json:"name"`
+
+	// Timezone IANA zone the panel formats dates in
+	Timezone *string `json:"timezone,omitempty"`
+}
+
+// OrganizationInputBodyAccountType individual opens the person's personal organization; company opens an organization that can invite members. Cannot be changed
+type OrganizationInputBodyAccountType string
+
+// OrganizationInputBodyIndustry Required for a company, refused for an individual
+type OrganizationInputBodyIndustry string
 
 // OrganizationInvitationsOutputBody defines model for OrganizationInvitationsOutputBody.
 type OrganizationInvitationsOutputBody struct {
@@ -4971,19 +5113,28 @@ type OrganizationItem struct {
 	// Examples: https://example.com/schemas/OrganizationItem.json
 	Schema *string `json:"$schema,omitempty"`
 
+	// AccountType individual is the person's personal organization; company can invite members. Immutable
+	AccountType OrganizationItemAccountType `json:"account_type"`
+
 	// Country ISO-3166 alpha-2 this organization is invoiced in. Immutable.
 	Country   string    `json:"country"`
 	CreatedAt time.Time `json:"created_at"`
 
 	// Currency ISO-4217 every price, invoice and wallet movement for this organization is denominated in. Derived from country, immutable.
-	Currency    string     `json:"currency"`
-	Id          string     `json:"id"`
+	Currency string `json:"currency"`
+	Id       string `json:"id"`
+
+	// Industry A company's industry slug, as chosen at onboarding
+	Industry    *string    `json:"industry,omitempty"`
 	IsActive    bool       `json:"is_active"`
 	IsPersonal  bool       `json:"is_personal"`
 	Name        string     `json:"name"`
 	Role        string     `json:"role"`
 	SuspendedAt *time.Time `json:"suspended_at,omitempty"`
 }
+
+// OrganizationItemAccountType individual is the person's personal organization; company can invite members. Immutable
+type OrganizationItemAccountType string
 
 // OrganizationMemberItem defines model for OrganizationMemberItem.
 type OrganizationMemberItem struct {
@@ -5169,26 +5320,28 @@ type ProfileBody struct {
 	Address string  `json:"address"`
 	City    string  `json:"city"`
 
-	// Country ISO-3166 alpha-2
-	Country  string `json:"country"`
-	District string `json:"district"`
+	// Country ISO-3166 alpha-2. Must match the organization's billing country; omitted, it is taken from the organization
+	Country *string `json:"country,omitempty"`
 
-	// Kind individual = TCKN, company = VKN (or the owner's TCKN for sole proprietorships) + tax office
-	Kind       ProfileBodyKind `json:"kind"`
-	Phone      *string         `json:"phone,omitempty"`
-	PostalCode string          `json:"postal_code"`
+	// District Required in Türkiye
+	District *string `json:"district,omitempty"`
 
-	// TaxId TCKN (11 digits) or VKN (10) — checksum validated
-	TaxId string `json:"tax_id"`
+	// Kind The organization's account type, which the profile must match (00078). Omitted, it is taken from the organization
+	Kind       *ProfileBodyKind `json:"kind,omitempty"`
+	Phone      *string          `json:"phone,omitempty"`
+	PostalCode string           `json:"postal_code"`
 
-	// TaxOffice Required for companies
+	// TaxId In Türkiye a TCKN (11 digits) or VKN (10), checksum validated and required. Elsewhere an optional VAT or tax number
+	TaxId *string `json:"tax_id,omitempty"`
+
+	// TaxOffice Required for a company invoiced in Türkiye
 	TaxOffice *string `json:"tax_office,omitempty"`
 
 	// Title Person's name, or the registered trade title
 	Title string `json:"title"`
 }
 
-// ProfileBodyKind individual = TCKN, company = VKN (or the owner's TCKN for sole proprietorships) + tax office
+// ProfileBodyKind The organization's account type, which the profile must match (00078). Omitted, it is taken from the organization
 type ProfileBodyKind string
 
 // ProjectAssignmentBody defines model for ProjectAssignmentBody.
@@ -5462,7 +5615,7 @@ type RegisterInputBody struct {
 	// Examples: https://example.com/schemas/RegisterInputBody.json
 	Schema *string `json:"$schema,omitempty"`
 
-	// Country ISO-3166 alpha-2. It seeds the personal organization's INVOICE country, which decides the billing currency (TR pays in TRY, everywhere else in USD) and cannot be changed afterwards. Omitted, it is derived from the timezone, and TR when that yields nothing
+	// Country ISO-3166 alpha-2 where the PERSON is, derived from the timezone when omitted. It decides nothing about billing: registration creates no organization, and the billing country is chosen when the first one is created at onboarding
 	Country *string             `json:"country,omitempty"`
 	Email   openapi_types.Email `json:"email"`
 
@@ -6165,7 +6318,7 @@ type TopupInputBody struct {
 	// Examples: https://example.com/schemas/TopupInputBody.json
 	Schema *string `json:"$schema,omitempty"`
 
-	// AmountMinor Gross, VAT included (kurus); minimum 20000 (200 TL)
+	// AmountMinor Gross, VAT included, in the wallet currency's minor unit. Must lie within topup_min_minor and topup_max_minor from GET /v1/wallet, or the request is refused with AMOUNT_TOO_LOW or AMOUNT_TOO_HIGH
 	AmountMinor int64                `json:"amount_minor"`
 	Method      TopupInputBodyMethod `json:"method"`
 }
@@ -6431,6 +6584,12 @@ type WalletBody struct {
 	// NegativeSince Moment the balance dropped to ≤0; the suspend counter runs from here
 	NegativeSince *time.Time `json:"negative_since,omitempty"`
 	RunwayHours   *int64     `json:"runway_hours,omitempty"`
+
+	// TopupMaxMinor Largest single top-up this wallet accepts, inclusive, in the wallet currency's minor unit
+	TopupMaxMinor int64 `json:"topup_max_minor"`
+
+	// TopupMinMinor Smallest single top-up this wallet accepts, inclusive, in the wallet currency's minor unit
+	TopupMinMinor int64 `json:"topup_min_minor"`
 }
 
 // ZoneCreateInputBody defines model for ZoneCreateInputBody.
@@ -6543,9 +6702,6 @@ type AuthOauthStartParams struct {
 	Mode        *AuthOauthStartParamsMode   `form:"mode,omitempty" json:"mode,omitempty"`
 	KvkkConsent *bool                       `form:"kvkk_consent,omitempty" json:"kvkk_consent,omitempty"`
 	Locale      *AuthOauthStartParamsLocale `form:"locale,omitempty" json:"locale,omitempty"`
-
-	// Country ISO-3166 alpha-2 billing country for a new account's personal organization. Ignored for an existing account
-	Country *string `form:"country,omitempty" json:"country,omitempty"`
 }
 
 // AuthOauthStartParamsMode defines parameters for AuthOauthStart.
@@ -6906,9 +7062,6 @@ type AccountDeletionRequestJSONRequestBody = DeletionRequestInputBody
 // AccountEmailChangeStartJSONRequestBody defines body for AccountEmailChangeStart for application/json ContentType.
 type AccountEmailChangeStartJSONRequestBody = EmailChangeInputBody
 
-// AccountOnboardingCompleteJSONRequestBody defines body for AccountOnboardingComplete for application/json ContentType.
-type AccountOnboardingCompleteJSONRequestBody = OnboardingInputBody
-
 // AccountChangePasswordJSONRequestBody defines body for AccountChangePassword for application/json ContentType.
 type AccountChangePasswordJSONRequestBody = PasswordChangeInputBody
 
@@ -7136,6 +7289,9 @@ type NotificationsMarkReadJSONRequestBody = NotificationsReadInputBody
 
 // OauthConsentDecideJSONRequestBody defines body for OauthConsentDecide for application/json ContentType.
 type OauthConsentDecideJSONRequestBody = DecisionInputBody
+
+// OnboardingOrganizationCreateJSONRequestBody defines body for OnboardingOrganizationCreate for application/json ContentType.
+type OnboardingOrganizationCreateJSONRequestBody = OrganizationInputBody
 
 // OrganizationsCreateJSONRequestBody defines body for OrganizationsCreate for application/json ContentType.
 type OrganizationsCreateJSONRequestBody = OrganizationCreateInputBody
@@ -7459,23 +7615,12 @@ type ClientInterface interface {
 	// Corresponds with DELETE /v1/account/identities/{provider} (the `AccountIdentityUnlink` operationId).
 	AccountIdentityUnlink(ctx context.Context, provider AccountIdentityUnlinkParamsProvider, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// AccountOnboardingCompleteWithBody Complete first-login onboarding
+	// AccountOnboardingComplete Complete onboarding
 	//
-	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-	//
-	// Takes any type of body and a specified content type.
+	// Onboarding step two, after the invoice details are saved. Refused with 409 ORGANIZATION_REQUIRED before the account belongs to an organization, and with 409 BILLING_PROFILE_REQUIRED while the organization the caller owns has no invoice details. Repeating it is harmless: the first completion time is kept.
 	//
 	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-	AccountOnboardingCompleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// AccountOnboardingComplete Complete first-login onboarding
-	//
-	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-	AccountOnboardingComplete(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	AccountOnboardingComplete(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AccountChangePasswordWithBody Change password
 	//
@@ -9341,6 +9486,24 @@ type ClientInterface interface {
 	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
 	OauthConsentDecide(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// OnboardingOrganizationCreateWithBody Create the first organization
+	//
+	// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+	OnboardingOrganizationCreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OnboardingOrganizationCreate Create the first organization
+	//
+	// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+	OnboardingOrganizationCreate(ctx context.Context, body OnboardingOrganizationCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// OrganizationInvitationGet View invitation
 	//
 	// Corresponds with GET /v1/organization-invitations/{token} (the `OrganizationInvitationGet` operationId).
@@ -10546,34 +10709,13 @@ func (c *Client) AccountIdentityUnlink(ctx context.Context, provider AccountIden
 	return c.Client.Do(req)
 }
 
-// AccountOnboardingCompleteWithBody Complete first-login onboarding
+// AccountOnboardingComplete Complete onboarding
 //
-// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-//
-// Takes any type of body and a specified content type.
+// Onboarding step two, after the invoice details are saved. Refused with 409 ORGANIZATION_REQUIRED before the account belongs to an organization, and with 409 BILLING_PROFILE_REQUIRED while the organization the caller owns has no invoice details. Repeating it is harmless: the first completion time is kept.
 //
 // Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-func (c *Client) AccountOnboardingCompleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAccountOnboardingCompleteRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// AccountOnboardingComplete Complete first-login onboarding
-//
-// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-func (c *Client) AccountOnboardingComplete(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewAccountOnboardingCompleteRequest(c.Server, body)
+func (c *Client) AccountOnboardingComplete(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountOnboardingCompleteRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -14888,6 +15030,44 @@ func (c *Client) OauthConsentDecide(ctx context.Context, id string, body OauthCo
 	return c.Client.Do(req)
 }
 
+// OnboardingOrganizationCreateWithBody Create the first organization
+//
+// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+func (c *Client) OnboardingOrganizationCreateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOnboardingOrganizationCreateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OnboardingOrganizationCreate Create the first organization
+//
+// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+func (c *Client) OnboardingOrganizationCreate(ctx context.Context, body OnboardingOrganizationCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOnboardingOrganizationCreateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // OrganizationInvitationGet View invitation
 //
 // Corresponds with GET /v1/organization-invitations/{token} (the `OrganizationInvitationGet` operationId).
@@ -17469,19 +17649,8 @@ func NewAccountIdentityUnlinkRequest(server string, provider AccountIdentityUnli
 	return req, nil
 }
 
-// NewAccountOnboardingCompleteRequest calls the generic AccountOnboardingComplete builder with application/json body
-func NewAccountOnboardingCompleteRequest(server string, body AccountOnboardingCompleteJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewAccountOnboardingCompleteRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewAccountOnboardingCompleteRequestWithBody constructs an http.Request for the AccountOnboardingComplete method, with any body, and a specified content type
-func NewAccountOnboardingCompleteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewAccountOnboardingCompleteRequest constructs an http.Request for the AccountOnboardingComplete method
+func NewAccountOnboardingCompleteRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -17499,12 +17668,10 @@ func NewAccountOnboardingCompleteRequestWithBody(server string, contentType stri
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -20054,18 +20221,6 @@ func NewAuthOauthStartRequest(server string, provider AuthOauthStartParamsProvid
 		if params.Locale != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "locale", *params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Country != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "country", *params.Country, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -25007,6 +25162,46 @@ func NewOauthConsentDecideRequestWithBody(server string, id string, contentType 
 	return req, nil
 }
 
+// NewOnboardingOrganizationCreateRequest calls the generic OnboardingOrganizationCreate builder with application/json body
+func NewOnboardingOrganizationCreateRequest(server string, body OnboardingOrganizationCreateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewOnboardingOrganizationCreateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewOnboardingOrganizationCreateRequestWithBody constructs an http.Request for the OnboardingOrganizationCreate method, with any body, and a specified content type
+func NewOnboardingOrganizationCreateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/onboarding/organization")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewOrganizationInvitationGetRequest constructs an http.Request for the OrganizationInvitationGet method
 func NewOrganizationInvitationGetRequest(server string, token string) (*http.Request, error) {
 	var err error
@@ -29301,23 +29496,14 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with DELETE /v1/account/identities/{provider} (the `AccountIdentityUnlink` operationId).
 	AccountIdentityUnlinkWithResponse(ctx context.Context, provider AccountIdentityUnlinkParamsProvider, reqEditors ...RequestEditorFn) (*AccountIdentityUnlinkResponse, error)
 
-	// AccountOnboardingCompleteWithBodyWithResponse Complete first-login onboarding
+	// AccountOnboardingCompleteWithResponse Complete onboarding
 	//
-	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+	// Onboarding step two, after the invoice details are saved. Refused with 409 ORGANIZATION_REQUIRED before the account belongs to an organization, and with 409 BILLING_PROFILE_REQUIRED while the organization the caller owns has no invoice details. Repeating it is harmless: the first completion time is kept.
 	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-	AccountOnboardingCompleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error)
-
-	// AccountOnboardingCompleteWithResponse Complete first-login onboarding
-	//
-	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-	AccountOnboardingCompleteWithResponse(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error)
+	AccountOnboardingCompleteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error)
 
 	// AccountChangePasswordWithBodyWithResponse Change password
 	//
@@ -31366,6 +31552,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /v1/oauth/authorization-requests/{id}/decision (the `OauthConsentDecide` operationId).
 	OauthConsentDecideWithResponse(ctx context.Context, id string, body OauthConsentDecideJSONRequestBody, reqEditors ...RequestEditorFn) (*OauthConsentDecideResponse, error)
+
+	// OnboardingOrganizationCreateWithBodyWithResponse Create the first organization
+	//
+	// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+	OnboardingOrganizationCreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OnboardingOrganizationCreateResponse, error)
+
+	// OnboardingOrganizationCreateWithResponse Create the first organization
+	//
+	// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+	OnboardingOrganizationCreateWithResponse(ctx context.Context, body OnboardingOrganizationCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*OnboardingOrganizationCreateResponse, error)
 
 	// OrganizationInvitationGetWithResponse View invitation
 	//
@@ -40859,6 +41063,54 @@ func (r OauthConsentDecideResponse) ContentType() string {
 	return ""
 }
 
+type OnboardingOrganizationCreateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *UserBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r OnboardingOrganizationCreateResponse) GetJSON200() *UserBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r OnboardingOrganizationCreateResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OnboardingOrganizationCreateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OnboardingOrganizationCreateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OnboardingOrganizationCreateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OnboardingOrganizationCreateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type OrganizationInvitationGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -45543,30 +45795,15 @@ func (c *ClientWithResponses) AccountIdentityUnlinkWithResponse(ctx context.Cont
 	return ParseAccountIdentityUnlinkResponse(rsp)
 }
 
-// AccountOnboardingCompleteWithBodyWithResponse Complete first-login onboarding
+// AccountOnboardingCompleteWithResponse Complete onboarding
 //
-// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+// Onboarding step two, after the invoice details are saved. Refused with 409 ORGANIZATION_REQUIRED before the account belongs to an organization, and with 409 BILLING_PROFILE_REQUIRED while the organization the caller owns has no invoice details. Repeating it is harmless: the first completion time is kept.
 //
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-func (c *ClientWithResponses) AccountOnboardingCompleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error) {
-	rsp, err := c.AccountOnboardingCompleteWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseAccountOnboardingCompleteResponse(rsp)
-}
-
-// AccountOnboardingCompleteWithResponse Complete first-login onboarding
-//
-// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+// Returns a wrapper object for the known response body format(s).
 //
 // Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
-func (c *ClientWithResponses) AccountOnboardingCompleteWithResponse(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error) {
-	rsp, err := c.AccountOnboardingComplete(ctx, body, reqEditors...)
+func (c *ClientWithResponses) AccountOnboardingCompleteWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error) {
+	rsp, err := c.AccountOnboardingComplete(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -49083,6 +49320,36 @@ func (c *ClientWithResponses) OauthConsentDecideWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseOauthConsentDecideResponse(rsp)
+}
+
+// OnboardingOrganizationCreateWithBodyWithResponse Create the first organization
+//
+// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+func (c *ClientWithResponses) OnboardingOrganizationCreateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OnboardingOrganizationCreateResponse, error) {
+	rsp, err := c.OnboardingOrganizationCreateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOnboardingOrganizationCreateResponse(rsp)
+}
+
+// OnboardingOrganizationCreateWithResponse Create the first organization
+//
+// Onboarding step one. Creates the organization, its wallet in the currency the country decides and the caller's owner membership, and makes it the session's active organization. 409 ORGANIZATION_EXISTS when the account already belongs to an organization.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/onboarding/organization (the `OnboardingOrganizationCreate` operationId).
+func (c *ClientWithResponses) OnboardingOrganizationCreateWithResponse(ctx context.Context, body OnboardingOrganizationCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*OnboardingOrganizationCreateResponse, error) {
+	rsp, err := c.OnboardingOrganizationCreate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOnboardingOrganizationCreateResponse(rsp)
 }
 
 // OrganizationInvitationGetWithResponse View invitation
@@ -56786,6 +57053,39 @@ func ParseOauthConsentDecideResponse(rsp *http.Response) (*OauthConsentDecideRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DecisionOutputBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOnboardingOrganizationCreateResponse parses an HTTP response from a OnboardingOrganizationCreateWithResponse call
+func ParseOnboardingOrganizationCreateResponse(rsp *http.Response) (*OnboardingOrganizationCreateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OnboardingOrganizationCreateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
