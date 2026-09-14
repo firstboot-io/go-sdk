@@ -4881,6 +4881,17 @@ type NotificationsReadOutputBody struct {
 	UnreadCount int64   `json:"unread_count"`
 }
 
+// OnboardingInputBody defines model for OnboardingInputBody.
+type OnboardingInputBody struct {
+	// Schema A URL to the JSON Schema for this object.
+	//
+	// Examples: https://example.com/schemas/OnboardingInputBody.json
+	Schema *string `json:"$schema,omitempty"`
+
+	// Timezone IANA zone the customer confirmed. Sent without a country, so the person's country moves with it, as on PATCH /v1/account
+	Timezone *string `json:"timezone,omitempty"`
+}
+
 // OrganizationBody defines model for OrganizationBody.
 type OrganizationBody struct {
 	Id       string `json:"id"`
@@ -6234,20 +6245,23 @@ type UserBody struct {
 	Country *string `json:"country,omitempty"`
 
 	// DeletionScheduledFor When this account is erased unless the request is cancelled
-	DeletionScheduledFor   *time.Time         `json:"deletion_scheduled_for,omitempty"`
-	Email                  string             `json:"email"`
-	EmailVerified          bool               `json:"email_verified"`
-	FirstName              string             `json:"first_name"`
-	FullName               string             `json:"full_name"`
-	HasPassword            bool               `json:"has_password"`
-	Id                     string             `json:"id"`
-	Impersonation          *ImpersonationBody `json:"impersonation,omitempty"`
-	LastName               string             `json:"last_name"`
-	Locale                 string             `json:"locale"`
-	OrganizationIsPersonal *bool              `json:"organization_is_personal,omitempty"`
-	OrganizationRole       *string            `json:"organization_role,omitempty"`
-	OrganizationSuspended  *bool              `json:"organization_suspended,omitempty"`
-	PhoneVerified          bool               `json:"phone_verified"`
+	DeletionScheduledFor *time.Time         `json:"deletion_scheduled_for,omitempty"`
+	Email                string             `json:"email"`
+	EmailVerified        bool               `json:"email_verified"`
+	FirstName            string             `json:"first_name"`
+	FullName             string             `json:"full_name"`
+	HasPassword          bool               `json:"has_password"`
+	Id                   string             `json:"id"`
+	Impersonation        *ImpersonationBody `json:"impersonation,omitempty"`
+	LastName             string             `json:"last_name"`
+	Locale               string             `json:"locale"`
+
+	// OnboardingCompleted False until the customer finishes the first-login onboarding screen
+	OnboardingCompleted    bool    `json:"onboarding_completed"`
+	OrganizationIsPersonal *bool   `json:"organization_is_personal,omitempty"`
+	OrganizationRole       *string `json:"organization_role,omitempty"`
+	OrganizationSuspended  *bool   `json:"organization_suspended,omitempty"`
+	PhoneVerified          bool    `json:"phone_verified"`
 
 	// Timezone IANA zone the panel formats dates in. Absent until the account has one
 	Timezone    *string `json:"timezone,omitempty"`
@@ -6529,6 +6543,9 @@ type AuthOauthStartParams struct {
 	Mode        *AuthOauthStartParamsMode   `form:"mode,omitempty" json:"mode,omitempty"`
 	KvkkConsent *bool                       `form:"kvkk_consent,omitempty" json:"kvkk_consent,omitempty"`
 	Locale      *AuthOauthStartParamsLocale `form:"locale,omitempty" json:"locale,omitempty"`
+
+	// Country ISO-3166 alpha-2 billing country for a new account's personal organization. Ignored for an existing account
+	Country *string `form:"country,omitempty" json:"country,omitempty"`
 }
 
 // AuthOauthStartParamsMode defines parameters for AuthOauthStart.
@@ -6888,6 +6905,9 @@ type AccountDeletionRequestJSONRequestBody = DeletionRequestInputBody
 
 // AccountEmailChangeStartJSONRequestBody defines body for AccountEmailChangeStart for application/json ContentType.
 type AccountEmailChangeStartJSONRequestBody = EmailChangeInputBody
+
+// AccountOnboardingCompleteJSONRequestBody defines body for AccountOnboardingComplete for application/json ContentType.
+type AccountOnboardingCompleteJSONRequestBody = OnboardingInputBody
 
 // AccountChangePasswordJSONRequestBody defines body for AccountChangePassword for application/json ContentType.
 type AccountChangePasswordJSONRequestBody = PasswordChangeInputBody
@@ -7438,6 +7458,24 @@ type ClientInterface interface {
 	//
 	// Corresponds with DELETE /v1/account/identities/{provider} (the `AccountIdentityUnlink` operationId).
 	AccountIdentityUnlink(ctx context.Context, provider AccountIdentityUnlinkParamsProvider, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AccountOnboardingCompleteWithBody Complete first-login onboarding
+	//
+	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+	AccountOnboardingCompleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// AccountOnboardingComplete Complete first-login onboarding
+	//
+	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+	AccountOnboardingComplete(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// AccountChangePasswordWithBody Change password
 	//
@@ -10498,6 +10536,44 @@ func (c *Client) AccountIdentitiesList(ctx context.Context, reqEditors ...Reques
 // Corresponds with DELETE /v1/account/identities/{provider} (the `AccountIdentityUnlink` operationId).
 func (c *Client) AccountIdentityUnlink(ctx context.Context, provider AccountIdentityUnlinkParamsProvider, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAccountIdentityUnlinkRequest(c.Server, provider)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AccountOnboardingCompleteWithBody Complete first-login onboarding
+//
+// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+func (c *Client) AccountOnboardingCompleteWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountOnboardingCompleteRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// AccountOnboardingComplete Complete first-login onboarding
+//
+// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+func (c *Client) AccountOnboardingComplete(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAccountOnboardingCompleteRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -17393,6 +17469,46 @@ func NewAccountIdentityUnlinkRequest(server string, provider AccountIdentityUnli
 	return req, nil
 }
 
+// NewAccountOnboardingCompleteRequest calls the generic AccountOnboardingComplete builder with application/json body
+func NewAccountOnboardingCompleteRequest(server string, body AccountOnboardingCompleteJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAccountOnboardingCompleteRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewAccountOnboardingCompleteRequestWithBody constructs an http.Request for the AccountOnboardingComplete method, with any body, and a specified content type
+func NewAccountOnboardingCompleteRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/account/onboarding")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewAccountChangePasswordRequest calls the generic AccountChangePassword builder with application/json body
 func NewAccountChangePasswordRequest(server string, body AccountChangePasswordJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -19938,6 +20054,18 @@ func NewAuthOauthStartRequest(server string, provider AuthOauthStartParamsProvid
 		if params.Locale != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "locale", *params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Country != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "country", *params.Country, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -29173,6 +29301,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with DELETE /v1/account/identities/{provider} (the `AccountIdentityUnlink` operationId).
 	AccountIdentityUnlinkWithResponse(ctx context.Context, provider AccountIdentityUnlinkParamsProvider, reqEditors ...RequestEditorFn) (*AccountIdentityUnlinkResponse, error)
 
+	// AccountOnboardingCompleteWithBodyWithResponse Complete first-login onboarding
+	//
+	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+	AccountOnboardingCompleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error)
+
+	// AccountOnboardingCompleteWithResponse Complete first-login onboarding
+	//
+	// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+	AccountOnboardingCompleteWithResponse(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error)
+
 	// AccountChangePasswordWithBodyWithResponse Change password
 	//
 	// Verifies the current password, writes the new one, and terminates all sessions except the current one.
@@ -32912,6 +33058,54 @@ func (r AccountIdentityUnlinkResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AccountIdentityUnlinkResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type AccountOnboardingCompleteResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *UserBody
+	// ApplicationproblemJSONDefault the response for an HTTP default `application/problem+json` response
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r AccountOnboardingCompleteResponse) GetJSON200() *UserBody {
+	return r.JSON200
+}
+
+// GetApplicationproblemJSONDefault returns the response for an HTTP default `application/problem+json` response
+func (r AccountOnboardingCompleteResponse) GetApplicationproblemJSONDefault() *ErrorModel {
+	return r.ApplicationproblemJSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r AccountOnboardingCompleteResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r AccountOnboardingCompleteResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AccountOnboardingCompleteResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r AccountOnboardingCompleteResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -45349,6 +45543,36 @@ func (c *ClientWithResponses) AccountIdentityUnlinkWithResponse(ctx context.Cont
 	return ParseAccountIdentityUnlinkResponse(rsp)
 }
 
+// AccountOnboardingCompleteWithBodyWithResponse Complete first-login onboarding
+//
+// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+func (c *ClientWithResponses) AccountOnboardingCompleteWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error) {
+	rsp, err := c.AccountOnboardingCompleteWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountOnboardingCompleteResponse(rsp)
+}
+
+// AccountOnboardingCompleteWithResponse Complete first-login onboarding
+//
+// Records that the customer finished the first-login screen, applying the confirmed time zone first. Repeating it is harmless: the first completion time is kept. The organization's invoice country and currency are not changed here; they are fixed when the organization is created.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/account/onboarding (the `AccountOnboardingComplete` operationId).
+func (c *ClientWithResponses) AccountOnboardingCompleteWithResponse(ctx context.Context, body AccountOnboardingCompleteJSONRequestBody, reqEditors ...RequestEditorFn) (*AccountOnboardingCompleteResponse, error) {
+	rsp, err := c.AccountOnboardingComplete(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAccountOnboardingCompleteResponse(rsp)
+}
+
 // AccountChangePasswordWithBodyWithResponse Change password
 //
 // Verifies the current password, writes the new one, and terminates all sessions except the current one.
@@ -51057,6 +51281,39 @@ func ParseAccountIdentityUnlinkResponse(rsp *http.Response) (*AccountIdentityUnl
 	switch {
 	case rsp.StatusCode == 204:
 		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseAccountOnboardingCompleteResponse parses an HTTP response from a AccountOnboardingCompleteWithResponse call
+func ParseAccountOnboardingCompleteResponse(rsp *http.Response) (*AccountOnboardingCompleteResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AccountOnboardingCompleteResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest ErrorModel
