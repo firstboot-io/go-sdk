@@ -1937,6 +1937,9 @@ type AccountUpdateInputBody struct {
 	LastName *string                       `json:"last_name,omitempty"`
 	Locale   *AccountUpdateInputBodyLocale `json:"locale,omitempty"`
 
+	// MarketingOptIn true opts in to marketing messages, false withdraws the consent
+	MarketingOptIn *bool `json:"marketing_opt_in,omitempty"`
+
 	// Timezone IANA zone every date in the panel is formatted in. Sending it without a country moves the country with it
 	Timezone *string `json:"timezone,omitempty"`
 }
@@ -3923,6 +3926,7 @@ type ExecStartOutputBody struct {
 
 // ExportAccountSummaryRow defines model for ExportAccountSummaryRow.
 type ExportAccountSummaryRow struct {
+	Consents             []byte     `json:"Consents"`
 	Country              *string    `json:"Country"`
 	CreatedAt            time.Time  `json:"CreatedAt"`
 	DeletionRequestedAt  *time.Time `json:"DeletionRequestedAt"`
@@ -3932,9 +3936,9 @@ type ExportAccountSummaryRow struct {
 	FirstName            string     `json:"FirstName"`
 	FullName             string     `json:"FullName"`
 	ID                   string     `json:"ID"`
-	KvkkConsents         []byte     `json:"KvkkConsents"`
 	LastName             string     `json:"LastName"`
 	Locale               string     `json:"Locale"`
+	MarketingOptInAt     *time.Time `json:"MarketingOptInAt"`
 	Phone                *string    `json:"Phone"`
 	PhoneVerifiedAt      *time.Time `json:"PhoneVerifiedAt"`
 	SuspendedAt          *time.Time `json:"SuspendedAt"`
@@ -5038,13 +5042,16 @@ type OrganizationDetail struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	// Currency ISO-4217 every price, invoice and wallet movement for this organization is denominated in. Derived from country, immutable.
-	Currency    string     `json:"currency"`
-	Id          string     `json:"id"`
-	IsActive    bool       `json:"is_active"`
-	IsPersonal  bool       `json:"is_personal"`
-	Name        string     `json:"name"`
-	Role        string     `json:"role"`
-	SuspendedAt *time.Time `json:"suspended_at,omitempty"`
+	Currency string `json:"currency"`
+
+	// DistanceSalesRequired True when a top-up must carry distance_sales_accepted: an individual account invoiced in Türkiye
+	DistanceSalesRequired bool       `json:"distance_sales_required"`
+	Id                    string     `json:"id"`
+	IsActive              bool       `json:"is_active"`
+	IsPersonal            bool       `json:"is_personal"`
+	Name                  string     `json:"name"`
+	Role                  string     `json:"role"`
+	SuspendedAt           *time.Time `json:"suspended_at,omitempty"`
 }
 
 // OrganizationInputBody defines model for OrganizationInputBody.
@@ -5122,7 +5129,10 @@ type OrganizationItem struct {
 
 	// Currency ISO-4217 every price, invoice and wallet movement for this organization is denominated in. Derived from country, immutable.
 	Currency string `json:"currency"`
-	Id       string `json:"id"`
+
+	// DistanceSalesRequired True when a top-up must carry distance_sales_accepted: an individual account invoiced in Türkiye
+	DistanceSalesRequired bool   `json:"distance_sales_required"`
+	Id                    string `json:"id"`
 
 	// Industry A company's industry slug, as chosen at onboarding
 	Industry    *string    `json:"industry,omitempty"`
@@ -5252,9 +5262,15 @@ type PlanBody struct {
 	Currency string `json:"currency"`
 	DiskGb   int64  `json:"disk_gb"`
 
-	// HourlyPriceMinor ceil(monthly/672) — derived
+	// HourlyPriceMicros monthly/672 in millionths of a major unit (1 USD = 1,000,000). Display only.
+	HourlyPriceMicros int64 `json:"hourly_price_micros"`
+
+	// HourlyPriceMinor ceil(monthly/672) — the METERED rate, a whole minor unit. Do not multiply it out for a display figure; use hourly_price_micros.
 	HourlyPriceMinor int64 `json:"hourly_price_minor"`
-	MemoryMb         int64 `json:"memory_mb"`
+
+	// InStock A schedulable host carries this plan. False means it can be priced but not ordered yet.
+	InStock  bool  `json:"in_stock"`
+	MemoryMb int64 `json:"memory_mb"`
 
 	// MonthlyPriceMinor Monthly price in Currency's minor unit — a fixed price point in that currency when set, else the USD base converted at the latest TCMB rate
 	MonthlyPriceMinor int64   `json:"monthly_price_minor"`
@@ -5266,6 +5282,9 @@ type PlanBody struct {
 
 	// TrafficGb Included outbound traffic per month (GB)
 	TrafficGb int64 `json:"traffic_gb"`
+
+	// UsdHourlyPriceMicros The same rate over the USD base — display only
+	UsdHourlyPriceMicros int64 `json:"usd_hourly_price_micros"`
 
 	// UsdHourlyPriceMinor ceil(USD monthly/672) — display only
 	UsdHourlyPriceMinor int64 `json:"usd_hourly_price_minor"`
@@ -5622,13 +5641,20 @@ type RegisterInputBody struct {
 	// FirstName Given name. Separate from the family name because a registry and a Turkish invoice both take them as separate values
 	FirstName string `json:"first_name"`
 
-	// KvkkConsent KVKK disclosure consent — required
-	KvkkConsent bool `json:"kvkk_consent"`
+	// KvkkConsent Deprecated: send terms_accepted. Still read as terms_accepted when that is false
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	KvkkConsent *bool `json:"kvkk_consent,omitempty"`
 
 	// LastName Family name
 	LastName string                   `json:"last_name"`
 	Locale   *RegisterInputBodyLocale `json:"locale,omitempty"`
-	Password string                   `json:"password"`
+
+	// MarketingOptIn Optional consent to marketing messages. Defaults to false
+	MarketingOptIn *bool  `json:"marketing_opt_in,omitempty"`
+	Password       string `json:"password"`
+
+	// TermsAccepted Must be true: the customer accepts the Terms of Service and the Acceptable Use Policy. The privacy notice is presented, not accepted. Refused with TERMS_NOT_ACCEPTED otherwise
+	TermsAccepted *bool `json:"terms_accepted,omitempty"`
 
 	// Timezone IANA zone as the browser resolved it (Intl.DateTimeFormat().resolvedOptions().timeZone). The country is derived from it when none is given
 	Timezone *string `json:"timezone,omitempty"`
@@ -6319,8 +6345,11 @@ type TopupInputBody struct {
 	Schema *string `json:"$schema,omitempty"`
 
 	// AmountMinor Gross, VAT included, in the wallet currency's minor unit. Must lie within topup_min_minor and topup_max_minor from GET /v1/wallet, or the request is refused with AMOUNT_TOO_LOW or AMOUNT_TOO_HIGH
-	AmountMinor int64                `json:"amount_minor"`
-	Method      TopupInputBodyMethod `json:"method"`
+	AmountMinor int64 `json:"amount_minor"`
+
+	// DistanceSalesAccepted The customer confirms the pre-information form and the distance sales contract, including that the right of withdrawal ends once an instantly performed service starts. Required when the organization's distance_sales_required is true (an individual account invoiced in Türkiye), refused with DISTANCE_SALES_NOT_ACCEPTED otherwise; ignored for every other organization
+	DistanceSalesAccepted *bool                `json:"distance_sales_accepted,omitempty"`
+	Method                TopupInputBodyMethod `json:"method"`
 }
 
 // TopupInputBodyMethod defines model for TopupInputBody.Method.
@@ -6408,6 +6437,9 @@ type UserBody struct {
 	Impersonation        *ImpersonationBody `json:"impersonation,omitempty"`
 	LastName             string             `json:"last_name"`
 	Locale               string             `json:"locale"`
+
+	// MarketingOptIn Whether the customer agreed to receive marketing messages. Optional and off unless they opted in; changed with PATCH /v1/account
+	MarketingOptIn bool `json:"marketing_opt_in"`
 
 	// OnboardingCompleted False until the customer finishes the first-login onboarding screen
 	OnboardingCompleted    bool    `json:"onboarding_completed"`
@@ -6699,7 +6731,15 @@ type AuthOauthCallbackParamsProvider string
 
 // AuthOauthStartParams defines parameters for AuthOauthStart.
 type AuthOauthStartParams struct {
-	Mode        *AuthOauthStartParamsMode   `form:"mode,omitempty" json:"mode,omitempty"`
+	Mode *AuthOauthStartParamsMode `form:"mode,omitempty" json:"mode,omitempty"`
+
+	// TermsAccepted Must be true for a first-time social sign-up (Terms of Service and Acceptable Use Policy); otherwise the callback redirects with oauth_error=TERMS_NOT_ACCEPTED
+	TermsAccepted *bool `form:"terms_accepted,omitempty" json:"terms_accepted,omitempty"`
+
+	// MarketingOptIn Optional consent to marketing messages, applied only when the flow creates a new account
+	MarketingOptIn *bool `form:"marketing_opt_in,omitempty" json:"marketing_opt_in,omitempty"`
+
+	// KvkkConsent Deprecated: send terms_accepted. Still read as terms_accepted when that is false
 	KvkkConsent *bool                       `form:"kvkk_consent,omitempty" json:"kvkk_consent,omitempty"`
 	Locale      *AuthOauthStartParamsLocale `form:"locale,omitempty" json:"locale,omitempty"`
 }
@@ -20197,6 +20237,30 @@ func NewAuthOauthStartRequest(server string, provider AuthOauthStartParamsProvid
 		if params.Mode != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "mode", *params.Mode, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.TermsAccepted != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "terms_accepted", *params.TermsAccepted, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MarketingOptIn != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "marketing_opt_in", *params.MarketingOptIn, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
