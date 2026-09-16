@@ -1751,22 +1751,31 @@ func (e PlansListParamsKind) Valid() bool {
 
 // Defines values for ServersListParamsState.
 const (
-	ServersListParamsStateEmpty   ServersListParamsState = ""
-	ServersListParamsStateOther   ServersListParamsState = "other"
-	ServersListParamsStateRunning ServersListParamsState = "running"
-	ServersListParamsStateStopped ServersListParamsState = "stopped"
+	ServersListParamsStateBusy      ServersListParamsState = "busy"
+	ServersListParamsStateEmpty     ServersListParamsState = ""
+	ServersListParamsStateError     ServersListParamsState = "error"
+	ServersListParamsStateOther     ServersListParamsState = "other"
+	ServersListParamsStateRunning   ServersListParamsState = "running"
+	ServersListParamsStateStopped   ServersListParamsState = "stopped"
+	ServersListParamsStateSuspended ServersListParamsState = "suspended"
 )
 
 // Valid indicates whether the value is a known member of the ServersListParamsState enum.
 func (e ServersListParamsState) Valid() bool {
 	switch e {
+	case ServersListParamsStateBusy:
+		return true
 	case ServersListParamsStateEmpty:
+		return true
+	case ServersListParamsStateError:
 		return true
 	case ServersListParamsStateOther:
 		return true
 	case ServersListParamsStateRunning:
 		return true
 	case ServersListParamsStateStopped:
+		return true
+	case ServersListParamsStateSuspended:
 		return true
 	default:
 		return false
@@ -5614,8 +5623,10 @@ type RegionBody struct {
 
 // RegionRef defines model for RegionRef.
 type RegionRef struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	// CountryCode ISO 3166-1 alpha-2, lowercase (e.g. tr). Empty when staff has not set one; render the region without a country rather than guessing.
+	CountryCode string `json:"country_code"`
+	Name        string `json:"name"`
+	Slug        string `json:"slug"`
 }
 
 // RegionsOutputBody defines model for RegionsOutputBody.
@@ -6967,10 +6978,13 @@ type ServersListParams struct {
 	// Search Name, IP address or image name, partial match
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
-	// State State bucket; 'other' is everything that is neither running nor stopped
-	State  *ServersListParamsState `form:"state,omitempty" json:"state,omitempty"`
-	Limit  *int32                  `form:"limit,omitempty" json:"limit,omitempty"`
-	Offset *int32                  `form:"offset,omitempty" json:"offset,omitempty"`
+	// State State bucket. busy: work in flight (the unsettled states); error: any error_*; suspended: suspended or abuse_suspended; other: everything that is neither running nor stopped, which is busy, error and suspended together
+	State *ServersListParamsState `form:"state,omitempty" json:"state,omitempty"`
+
+	// Region Region slug, as in GET /v1/regions. An unknown slug matches no servers.
+	Region *string `form:"region,omitempty" json:"region,omitempty"`
+	Limit  *int32  `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int32  `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // ServersListParamsState defines parameters for ServersList.
@@ -26316,6 +26330,18 @@ func NewServersListRequest(server string, params *ServersListParams) (*http.Requ
 		if params.State != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Region != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "region", *params.Region, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
