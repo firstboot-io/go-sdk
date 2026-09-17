@@ -20,14 +20,20 @@ import (
 
 // Defines values for AccountUpdateInputBodyLocale.
 const (
+	AccountUpdateInputBodyLocaleDe AccountUpdateInputBodyLocale = "de"
 	AccountUpdateInputBodyLocaleEn AccountUpdateInputBodyLocale = "en"
+	AccountUpdateInputBodyLocaleEs AccountUpdateInputBodyLocale = "es"
 	AccountUpdateInputBodyLocaleTr AccountUpdateInputBodyLocale = "tr"
 )
 
 // Valid indicates whether the value is a known member of the AccountUpdateInputBodyLocale enum.
 func (e AccountUpdateInputBodyLocale) Valid() bool {
 	switch e {
+	case AccountUpdateInputBodyLocaleDe:
+		return true
 	case AccountUpdateInputBodyLocaleEn:
+		return true
+	case AccountUpdateInputBodyLocaleEs:
 		return true
 	case AccountUpdateInputBodyLocaleTr:
 		return true
@@ -1145,14 +1151,20 @@ func (e ProfileBodyKind) Valid() bool {
 
 // Defines values for RegisterInputBodyLocale.
 const (
+	RegisterInputBodyLocaleDe RegisterInputBodyLocale = "de"
 	RegisterInputBodyLocaleEn RegisterInputBodyLocale = "en"
+	RegisterInputBodyLocaleEs RegisterInputBodyLocale = "es"
 	RegisterInputBodyLocaleTr RegisterInputBodyLocale = "tr"
 )
 
 // Valid indicates whether the value is a known member of the RegisterInputBodyLocale enum.
 func (e RegisterInputBodyLocale) Valid() bool {
 	switch e {
+	case RegisterInputBodyLocaleDe:
+		return true
 	case RegisterInputBodyLocaleEn:
+		return true
+	case RegisterInputBodyLocaleEs:
 		return true
 	case RegisterInputBodyLocaleTr:
 		return true
@@ -1580,14 +1592,20 @@ func (e AuthOauthStartParamsMode) Valid() bool {
 
 // Defines values for AuthOauthStartParamsLocale.
 const (
+	AuthOauthStartParamsLocaleDe AuthOauthStartParamsLocale = "de"
 	AuthOauthStartParamsLocaleEn AuthOauthStartParamsLocale = "en"
+	AuthOauthStartParamsLocaleEs AuthOauthStartParamsLocale = "es"
 	AuthOauthStartParamsLocaleTr AuthOauthStartParamsLocale = "tr"
 )
 
 // Valid indicates whether the value is a known member of the AuthOauthStartParamsLocale enum.
 func (e AuthOauthStartParamsLocale) Valid() bool {
 	switch e {
+	case AuthOauthStartParamsLocaleDe:
+		return true
 	case AuthOauthStartParamsLocaleEn:
+		return true
+	case AuthOauthStartParamsLocaleEs:
 		return true
 	case AuthOauthStartParamsLocaleTr:
 		return true
@@ -2521,10 +2539,12 @@ type AppPlanBody struct {
 	CpuMillis int32 `json:"cpu_millis"`
 
 	// Currency Currency of monthly_price_minor — the asking organization's
-	Currency             string `json:"currency"`
-	MaxReplicas          int32  `json:"max_replicas"`
-	MemoryMb             int32  `json:"memory_mb"`
-	MonthlyPriceMinor    int64  `json:"monthly_price_minor"`
+	Currency          string `json:"currency"`
+	MaxReplicas       int32  `json:"max_replicas"`
+	MemoryMb          int32  `json:"memory_mb"`
+	MonthlyPriceMinor int64  `json:"monthly_price_minor"`
+
+	// Name Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
 	Name                 string `json:"name"`
 	Slug                 string `json:"slug"`
 	UsdMonthlyPriceMinor int64  `json:"usd_monthly_price_minor"`
@@ -2692,9 +2712,11 @@ type BackupAllBody struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	// DiskGb Source disk — the chosen plan's disk must be at least this
-	DiskGb     int64  `json:"disk_gb"`
-	Id         string `json:"id"`
-	Name       string `json:"name"`
+	DiskGb int64  `json:"disk_gb"`
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+
+	// RegionName Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
 	RegionName string `json:"region_name"`
 
 	// RegionSlug Region the restore will land in. A restore is pinned to the node holding the archive, so the region on create is taken from here and any region sent with the request is ignored.
@@ -3048,9 +3070,11 @@ type DatabaseBody struct {
 	ProjectId *string `json:"project_id,omitempty"`
 
 	// PublicAccess False = only the private network and attached apps can reach it
-	PublicAccess bool    `json:"public_access"`
-	RegionName   *string `json:"region_name,omitempty"`
-	RegionSlug   *string `json:"region_slug,omitempty"`
+	PublicAccess bool `json:"public_access"`
+
+	// RegionName Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
+	RegionName *string `json:"region_name,omitempty"`
+	RegionSlug *string `json:"region_slug,omitempty"`
 
 	// State SETTLED on active, stopped_dunning, suspended, deleted or either error_* state; provisioning, resizing and deleting are in flight. A create settles on active.
 	State DatabaseBodyState `json:"state"`
@@ -3178,9 +3202,11 @@ type DatabasePlanBody struct {
 	MemoryMb int64  `json:"memory_mb"`
 
 	// MonthlyPriceMinor Monthly price RESOLVED into Currency's minor unit
-	MonthlyPriceMinor int64  `json:"monthly_price_minor"`
-	Name              string `json:"name"`
-	Slug              string `json:"slug"`
+	MonthlyPriceMinor int64 `json:"monthly_price_minor"`
+
+	// Name Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 
 	// UsdMonthlyPriceMinor USD base price (cents) — display only, mirrors /v1/plans
 	UsdMonthlyPriceMinor int64 `json:"usd_monthly_price_minor"`
@@ -4160,12 +4186,14 @@ type FloatingIPBody struct {
 	// Schema A URL to the JSON Schema for this object.
 	//
 	// Examples: https://example.com/schemas/FloatingIPBody.json
-	Schema     *string   `json:"$schema,omitempty"`
-	Address    string    `json:"address"`
-	CreatedAt  time.Time `json:"created_at"`
-	Id         string    `json:"id"`
-	RegionName *string   `json:"region_name,omitempty"`
-	RegionSlug *string   `json:"region_slug,omitempty"`
+	Schema    *string   `json:"$schema,omitempty"`
+	Address   string    `json:"address"`
+	CreatedAt time.Time `json:"created_at"`
+	Id        string    `json:"id"`
+
+	// RegionName Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
+	RegionName *string `json:"region_name,omitempty"`
+	RegionSlug *string `json:"region_slug,omitempty"`
 
 	// Server Attached server; absent while detached
 	Server *FloatingIPServerRef `json:"server,omitempty"`
@@ -4667,7 +4695,9 @@ type LoadBalancerBody struct {
 	PlanSlug     *string `json:"plan_slug,omitempty"`
 
 	// ProjectId Project the load balancer belongs to (organizational)
-	ProjectId  *string `json:"project_id,omitempty"`
+	ProjectId *string `json:"project_id,omitempty"`
+
+	// RegionName Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
 	RegionName *string `json:"region_name,omitempty"`
 	RegionSlug *string `json:"region_slug,omitempty"`
 	RuleCount  int64   `json:"rule_count"`
@@ -5282,12 +5312,14 @@ type PlanBody struct {
 	MemoryMb int64 `json:"memory_mb"`
 
 	// MonthlyPriceMinor Monthly price in Currency's minor unit — a fixed price point in that currency when set, else the USD base converted at the latest TCMB rate
-	MonthlyPriceMinor int64   `json:"monthly_price_minor"`
-	Name              string  `json:"name"`
-	PlanTypeId        *string `json:"plan_type_id,omitempty"`
-	PlanTypeName      *string `json:"plan_type_name,omitempty"`
-	PlanTypeSlug      *string `json:"plan_type_slug,omitempty"`
-	Slug              string  `json:"slug"`
+	MonthlyPriceMinor int64 `json:"monthly_price_minor"`
+
+	// Name Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
+	Name         string  `json:"name"`
+	PlanTypeId   *string `json:"plan_type_id,omitempty"`
+	PlanTypeName *string `json:"plan_type_name,omitempty"`
+	PlanTypeSlug *string `json:"plan_type_slug,omitempty"`
+	Slug         string  `json:"slug"`
 
 	// TrafficGb Included outbound traffic per month (GB)
 	TrafficGb int64 `json:"traffic_gb"`
@@ -5304,12 +5336,14 @@ type PlanBody struct {
 
 // PlanSnapshot defines model for PlanSnapshot.
 type PlanSnapshot struct {
-	BandwidthMbps           int64   `json:"bandwidth_mbps"`
-	Cores                   int64   `json:"cores"`
-	Currency                string  `json:"currency"`
-	DiskGb                  int64   `json:"disk_gb"`
-	MemoryMb                int64   `json:"memory_mb"`
-	MonthlyPriceMinor       int64   `json:"monthly_price_minor"`
+	BandwidthMbps     int64  `json:"bandwidth_mbps"`
+	Cores             int64  `json:"cores"`
+	Currency          string `json:"currency"`
+	DiskGb            int64  `json:"disk_gb"`
+	MemoryMb          int64  `json:"memory_mb"`
+	MonthlyPriceMinor int64  `json:"monthly_price_minor"`
+
+	// Name Display name of the plan in the language asked for with Accept-Language (tr, en, de, es), read from the current catalog. A missing translation falls back to English (for any language but tr), then to the name the plan had at purchase, which is also what a request without the header gets.
 	Name                    string  `json:"name"`
 	Slug                    string  `json:"slug"`
 	SnapshotGbPriceCurrency *string `json:"snapshot_gb_price_currency,omitempty"`
@@ -5613,7 +5647,9 @@ type RegionBody struct {
 	CountryCode string `json:"country_code"`
 
 	// Id Stable region identity, also returned by region-scoped resources.
-	Id   string `json:"id"`
+	Id string `json:"id"`
+
+	// Name Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
 	Name string `json:"name"`
 
 	// NetworkAvailable An enabled datacenter is configured for new private networks in this region.
@@ -5625,8 +5661,10 @@ type RegionBody struct {
 type RegionRef struct {
 	// CountryCode ISO 3166-1 alpha-2, lowercase (e.g. tr). Empty when staff has not set one; render the region without a country rather than guessing.
 	CountryCode string `json:"country_code"`
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
+
+	// Name Display name in the language asked for with Accept-Language (tr, en, de, es). A request without the header, or with none of those languages, gets English. A missing translation falls back to English (for any language but tr), then to the base name.
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 // RegionsOutputBody defines model for RegionsOutputBody.

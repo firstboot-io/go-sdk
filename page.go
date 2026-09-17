@@ -105,11 +105,18 @@ func SearchServers(q string) ServerListOption {
 	return func(p *fbapi.ServersListParams) { p.Search = &q }
 }
 
-// ServersInState narrows to `running`, `stopped` or `other`. It is a BUCKET,
-// not a state value: `other` is everything that is neither of the first two,
-// which is why it cannot take an `error_provisioning`.
+// ServersInState narrows to a state BUCKET, not a state value, which is why it
+// cannot take an `error_provisioning`: `running`, `stopped`, `busy` (work in
+// flight), `error` (any error state), `suspended`, or `other`, which is
+// everything that is neither running nor stopped.
 func ServersInState(bucket fbapi.ServersListParamsState) ServerListOption {
 	return func(p *fbapi.ServersListParams) { p.State = &bucket }
+}
+
+// ServersInRegion narrows to one region, named by its slug as GET /v1/regions
+// lists it. An unknown slug matches no servers rather than being ignored.
+func ServersInRegion(slug string) ServerListOption {
+	return func(p *fbapi.ServersListParams) { p.Region = &slug }
 }
 
 // ServersInProject narrows to one project, or to the servers in none of them
