@@ -2450,6 +2450,9 @@ type AppDomainBody struct {
 	ChallengeName  string     `json:"challenge_name"`
 	ChallengeValue string     `json:"challenge_value"`
 	CheckedAt      *time.Time `json:"checked_at,omitempty"`
+
+	// ClaimExpiresAt While the claim is pending: when it stops reserving the hostname. Verify before then, or another organization may claim the name and this claim is released.
+	ClaimExpiresAt *time.Time `json:"claim_expires_at,omitempty"`
 	CnameTarget    string     `json:"cname_target"`
 	CreatedAt      time.Time  `json:"created_at"`
 	Hostname       string     `json:"hostname"`
@@ -2843,7 +2846,7 @@ type BuildCreateInputBody struct {
 	// GitRef Branch, tag or commit (default: the app's own ref, then main)
 	GitRef *string `json:"git_ref,omitempty"`
 
-	// SourceUrl HTTPS git repository URL containing a Dockerfile. Omit to rebuild the repository the app was created from.
+	// SourceUrl HTTPS git repository URL containing a Dockerfile. Omit to build the app's own repository. A different repository is a change of what the app runs, so it needs the permission PUT /v1/apps/{code}/source needs (the admin role, and the write scope for a token); a deploy-only caller may name the app's own repository at any ref.
 	SourceUrl *string `json:"source_url,omitempty"`
 }
 
@@ -3936,14 +3939,14 @@ type ExecStartInputBody struct {
 	// BuildId Required for kind build: the build whose output to follow
 	BuildId *string `json:"build_id,omitempty"`
 
-	// Kind shell = interactive terminal, logs = follow the container's output, https = follow the edge's access log, build = follow one build's output (build_id required)
+	// Kind shell = interactive terminal (organization admin or owner: it runs in the app's environment), logs = follow the container's output, https = follow the edge's access log, build = follow one build's output (build_id required)
 	Kind ExecStartInputBodyKind `json:"kind"`
 
 	// Replica shell/logs only: attach to this replica. Omitted = the lowest running one
 	Replica *int32 `json:"replica,omitempty"`
 }
 
-// ExecStartInputBodyKind shell = interactive terminal, logs = follow the container's output, https = follow the edge's access log, build = follow one build's output (build_id required)
+// ExecStartInputBodyKind shell = interactive terminal (organization admin or owner: it runs in the app's environment), logs = follow the container's output, https = follow the edge's access log, build = follow one build's output (build_id required)
 type ExecStartInputBodyKind string
 
 // ExecStartOutputBody defines model for ExecStartOutputBody.
@@ -4032,12 +4035,13 @@ type ExportUserPaymentsRow struct {
 
 // ExportUserResourcesRow defines model for ExportUserResourcesRow.
 type ExportUserResourcesRow struct {
-	Code      string     `json:"Code"`
-	CreatedAt time.Time  `json:"CreatedAt"`
-	DeletedAt *time.Time `json:"DeletedAt"`
-	Kind      string     `json:"Kind"`
-	Name      string     `json:"Name"`
-	State     string     `json:"State"`
+	Code          string     `json:"Code"`
+	CreatedAt     time.Time  `json:"CreatedAt"`
+	CurrentMember bool       `json:"CurrentMember"`
+	DeletedAt     *time.Time `json:"DeletedAt"`
+	Kind          string     `json:"Kind"`
+	Name          *string    `json:"Name"`
+	State         *string    `json:"State"`
 }
 
 // ExportUserSSHKeysRow defines model for ExportUserSSHKeysRow.
@@ -4049,10 +4053,11 @@ type ExportUserSSHKeysRow struct {
 
 // ExportUserTicketsRow defines model for ExportUserTicketsRow.
 type ExportUserTicketsRow struct {
-	Code      string    `json:"Code"`
-	CreatedAt time.Time `json:"CreatedAt"`
-	Status    string    `json:"Status"`
-	Subject   string    `json:"Subject"`
+	Code          string    `json:"Code"`
+	CreatedAt     time.Time `json:"CreatedAt"`
+	CurrentMember bool      `json:"CurrentMember"`
+	Status        *string   `json:"Status"`
+	Subject       string    `json:"Subject"`
 }
 
 // FeatureBody defines model for FeatureBody.
@@ -5888,7 +5893,7 @@ type ServerBillingBody struct {
 
 // ServerBillingPeriod defines model for ServerBillingPeriod.
 type ServerBillingPeriod struct {
-	// PaidMinor What was actually charged for the current prepaid period, including resize upgrade diffs. This is the figure an early-delete refund is pro-rated from
+	// PaidMinor What the current prepaid period actually cost: the period charge plus resize upgrade diffs, net of anything already refunded for it. An early-delete refund is pro-rated from this figure, or from the plan price when that is fixed in charge_currency and lower, so it never exceeds it
 	PaidMinor int64 `json:"paid_minor"`
 
 	// PaidThrough End of the prepaid period; absent in hourly mode
@@ -8029,7 +8034,7 @@ type ClientInterface interface {
 
 	// AppBuildCreateWithBody Build from a repository
 	//
-	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -8038,7 +8043,7 @@ type ClientInterface interface {
 
 	// AppBuildCreate Build from a repository
 	//
-	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -8066,7 +8071,7 @@ type ClientInterface interface {
 
 	// AppDomainAddWithBody Attach a custom domain
 	//
-	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -8075,7 +8080,7 @@ type ClientInterface interface {
 
 	// AppDomainAdd Attach a custom domain
 	//
-	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -8253,7 +8258,7 @@ type ClientInterface interface {
 
 	// AppUpdateWithBody Change app settings
 	//
-	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -8262,7 +8267,7 @@ type ClientInterface interface {
 
 	// AppUpdate Change app settings
 	//
-	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -11543,7 +11548,7 @@ func (c *Client) AppBuildsList(ctx context.Context, code string, reqEditors ...R
 
 // AppBuildCreateWithBody Build from a repository
 //
-// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 //
 // Takes any type of body and a specified content type.
 //
@@ -11562,7 +11567,7 @@ func (c *Client) AppBuildCreateWithBody(ctx context.Context, code string, conten
 
 // AppBuildCreate Build from a repository
 //
-// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -11630,7 +11635,7 @@ func (c *Client) AppDomainsList(ctx context.Context, code string, reqEditors ...
 
 // AppDomainAddWithBody Attach a custom domain
 //
-// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 //
 // Takes any type of body and a specified content type.
 //
@@ -11649,7 +11654,7 @@ func (c *Client) AppDomainAddWithBody(ctx context.Context, code string, contentT
 
 // AppDomainAdd Attach a custom domain
 //
-// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -12047,7 +12052,7 @@ func (c *Client) AppScale(ctx context.Context, code string, body AppScaleJSONReq
 
 // AppUpdateWithBody Change app settings
 //
-// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 //
 // Takes any type of body and a specified content type.
 //
@@ -12066,7 +12071,7 @@ func (c *Client) AppUpdateWithBody(ctx context.Context, code string, contentType
 
 // AppUpdate Change app settings
 //
-// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -29986,7 +29991,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppBuildCreateWithBodyWithResponse Build from a repository
 	//
-	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -29995,7 +30000,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppBuildCreateWithResponse Build from a repository
 	//
-	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+	// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -30029,7 +30034,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppDomainAddWithBodyWithResponse Attach a custom domain
 	//
-	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -30038,7 +30043,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppDomainAddWithResponse Attach a custom domain
 	//
-	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+	// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -30230,7 +30235,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppUpdateWithBodyWithResponse Change app settings
 	//
-	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -30239,7 +30244,7 @@ type ClientWithResponsesInterface interface {
 
 	// AppUpdateWithResponse Change app settings
 	//
-	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+	// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -46537,7 +46542,7 @@ func (c *ClientWithResponses) AppBuildsListWithResponse(ctx context.Context, cod
 
 // AppBuildCreateWithBodyWithResponse Build from a repository
 //
-// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -46552,7 +46557,7 @@ func (c *ClientWithResponses) AppBuildCreateWithBodyWithResponse(ctx context.Con
 
 // AppBuildCreateWithResponse Build from a repository
 //
-// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. To change the subdirectory or Dockerfile path, use PUT /v1/apps/{code}/source first.
+// Queues a build with the app's own build configuration and build-phase variables. The node's agent fetches the source, builds it with BuildKit, pushes the image to the region's registry and — on success — points the app at it, which rolls the container forward on the next cycle. One build at a time per app. The deploy scope builds the app's own repository, at its stored ref or another one; building a different repository answers 403 (ORGANIZATION_ROLE_FORBIDDEN or TOKEN_SCOPE_FORBIDDEN) unless the caller could change the app's source. To change the repository, subdirectory or Dockerfile path for good, use PUT /v1/apps/{code}/source first.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -46610,7 +46615,7 @@ func (c *ClientWithResponses) AppDomainsListWithResponse(ctx context.Context, co
 
 // AppDomainAddWithBodyWithResponse Attach a custom domain
 //
-// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -46625,7 +46630,7 @@ func (c *ClientWithResponses) AppDomainAddWithBodyWithResponse(ctx context.Conte
 
 // AppDomainAddWithResponse Attach a custom domain
 //
-// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname.
+// Records the claim and returns the DNS records to create. Nothing is routed until `appDomainVerify` finds the TXT record, which is what stops one customer from claiming another's hostname. An unverified claim reserves the hostname for seven days (`claim_expires_at`); after that another organization's claim releases it. A claim on a deleted app is released with the app.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -46949,7 +46954,7 @@ func (c *ClientWithResponses) AppScaleWithResponse(ctx context.Context, code str
 
 // AppUpdateWithBodyWithResponse Change app settings
 //
-// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -46964,7 +46969,7 @@ func (c *ClientWithResponses) AppUpdateWithBodyWithResponse(ctx context.Context,
 
 // AppUpdateWithResponse Change app settings
 //
-// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Memory and CPU are not here — those are a capacity reservation and change through a resize.
+// Sends the whole editable set. A port or start-command change produces a new container; the running one keeps serving until the replacement answers. Changing the start command needs the organization admin or owner role, because it runs with the app's environment; a member sends it back unchanged. Memory and CPU are not here — those are a capacity reservation and change through a resize.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
